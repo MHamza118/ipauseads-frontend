@@ -442,7 +442,7 @@ export default function Dashboard() {
                 <tbody>
                   {spotlightData.length === 0 ? (
                     <tr>
-                      <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
+                      <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
                         <p>No program data available yet.</p>
                         <p style={{ fontSize: "14px", color: "#666" }}>
                           Scans will be grouped by TV show/content here.
@@ -452,16 +452,6 @@ export default function Dashboard() {
                   ) : (
                     spotlightData.map((program, index) => (
                       <tr key={index}>
-                        <td className="pause-opportunities">
-                          <strong>{program.series_title}</strong>
-                          <div className="program-meta">
-                            <span className="publisher-badge">{program.publisher}</span>
-                            <span className="qr-badge">{program.qr_id}</span>
-                          </div>
-                        </td>
-                        <td className="conversion-count">
-                          {program.verified_conversions}
-                        </td>
                         <td>
                           <div className="program-thumbnail">
                             {program.thumbnail_url ? (
@@ -473,6 +463,21 @@ export default function Dashboard() {
                               <div className="placeholder-thumb">📺</div>
                             )}
                           </div>
+                        </td>
+                        <td>
+                          <span className="publisher-badge">{program.publisher}</span>
+                        </td>
+                        <td>
+                          <strong>{program.series_title}</strong>
+                        </td>
+                        <td>
+                          <span className="qr-badge">{program.qr_id}</span>
+                        </td>
+                        <td className="conversion-count">
+                          {program.verified_conversions}
+                        </td>
+                        <td>
+                          {program.last_scan_time ? new Date(program.last_scan_time).toLocaleString() : 'N/A'}
                         </td>
                         <td>
                           <div className="action-buttons">
