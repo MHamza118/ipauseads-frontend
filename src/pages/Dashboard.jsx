@@ -430,10 +430,13 @@ export default function Dashboard() {
               <table className="spotlight-table">
                 <thead>
                   <tr>
-                    <th>Pause Opportunities</th>
+                    <th>Thumbnail</th>
+                    <th>Publisher</th>
+                    <th>Program</th>
+                    <th>QR Code ID</th>
                     <th>Verified Conversions</th>
-                    <th>Spotlight</th>
-                    <th>Wallet (Verified Spend)</th>
+                    <th>Last Scan Time</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

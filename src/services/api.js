@@ -19,7 +19,7 @@
  import axios from "axios";
 
 // // Use the backend URL from env or fallback to localhost
- const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+ const API_URL = process.env.REACT_APP_API_URL || "https://ipauseads.com/api";
 
  // Option 2: Keep backend routes as /auth, /qr, etc.
  const api = axios.create({
