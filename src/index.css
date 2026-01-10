@@ -42,6 +42,13 @@ body{ margin:0; background:var(--bg); color:#0f1724; -webkit-font-smoothing:anti
 .auth-form input{ padding:12px; border-radius:10px; border:1px solid #e6e9ef; font-size:14px }
 .alert{ background:#fff4f4; color:#8a1f1f; padding:10px; border-radius:8px }
 
+/* Password Input Wrapper */
+.password-input-wrapper{ position:relative; display:flex; align-items:center }
+.password-input-wrapper input{ width:100%; padding-right:40px }
+.password-toggle-btn{ position:absolute; right:12px; background:none; border:none; cursor:pointer; color:#6b7280; padding:6px; display:flex; align-items:center; justify-content:center; transition:color 0.2s }
+.password-toggle-btn:hover{ color:#111827 }
+.password-toggle-btn svg{ width:20px; height:20px }
+
 .dashboard{ display:flex; gap:18px; padding:20px; align-items:flex-start; max-width:100%; width:100% }
 .filters{ width:260px; background:var(--card); border-radius:10px; padding:16px; box-shadow:0 6px 20px rgba(10,20,40,0.04); transition: all .18s ease; height:fit-content; position:sticky; top:16px }
 .filters.open{ transform: translateY(0) }

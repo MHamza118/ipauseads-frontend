@@ -20,6 +20,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [selectedIpMetrics, setSelectedIpMetrics] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
+  const [showPauseOpportunitiesModal, setShowPauseOpportunitiesModal] = useState(false);
+  const [showPauseDetails, setShowPauseDetails] = useState(false);
+  const [showVerifiedConversionsModal, setShowVerifiedConversionsModal] = useState(false);
+  const [showConversionsDetails, setShowConversionsDetails] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showWalletDetails, setShowWalletDetails] = useState(false);
+  const [expandedPublisher, setExpandedPublisher] = useState(null);
+  const [showAttentionSpotlightModal, setShowAttentionSpotlightModal] = useState(false);
+  const [showAttentionDetails, setShowAttentionDetails] = useState(false);
 
   // Filter states (still used for analytics summary)
   const [filters, setFilters] = useState({
@@ -430,19 +439,44 @@ export default function Dashboard() {
               <table className="spotlight-table">
                 <thead>
                   <tr>
-                    <th>Thumbnail</th>
-                    <th>Publisher</th>
-                    <th>Program</th>
-                    <th>QR Code ID</th>
-                    <th>Verified Conversions</th>
-                    <th>Last Scan Time</th>
-                    <th>Actions</th>
+                    <th>
+                      <button 
+                        className="header-button"
+                        onClick={() => setShowPauseOpportunitiesModal(true)}
+                      >
+                        Pause Opportunities
+                      </button>
+                    </th>
+                    <th>
+                      <button 
+                        className="header-button"
+                        onClick={() => setShowVerifiedConversionsModal(true)}
+                      >
+                        Verified Conversions
+                      </button>
+                    </th>
+                    <th>
+                      <button 
+                        className="header-button"
+                        onClick={() => setShowAttentionSpotlightModal(true)}
+                      >
+                        Attention Spotlight
+                      </button>
+                    </th>
+                    <th>
+                      <button 
+                        className="header-button"
+                        onClick={() => setShowWalletModal(true)}
+                      >
+                        Wallet (Verified Spend)
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {spotlightData.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
+                      <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
                         <p>No program data available yet.</p>
                         <p style={{ fontSize: "14px", color: "#666" }}>
                           Scans will be grouped by TV show/content here.
@@ -464,30 +498,23 @@ export default function Dashboard() {
                             )}
                           </div>
                         </td>
-                        <td>
-                          <span className="publisher-badge">{program.publisher}</span>
-                        </td>
-                        <td>
-                          <strong>{program.series_title}</strong>
-                        </td>
-                        <td>
-                          <span className="qr-badge">{program.qr_id}</span>
-                        </td>
                         <td className="conversion-count">
                           {program.verified_conversions}
                         </td>
                         <td>
-                          {program.last_scan_time ? new Date(program.last_scan_time).toLocaleString() : 'N/A'}
+                          <strong>{program.series_title}</strong>
+                          <div className="program-meta">
+                            <span className="publisher-badge">{program.publisher}</span>
+                            <span className="qr-badge">{program.qr_id}</span>
+                          </div>
                         </td>
                         <td>
-                          <div className="action-buttons">
-                            <button
-                              className="btn-view-log"
-                              onClick={() => handleViewLog(program)}
-                            >
-                              📋 View Log
-                            </button>
-                          </div>
+                          <button
+                            className="btn-view-log"
+                            onClick={() => handleViewLog(program)}
+                          >
+                            📋 View Log
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -856,6 +883,674 @@ export default function Dashboard() {
                 onClick={() => exportToCSV(programScans)}
               >
                 Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pause Opportunities Modal */}
+      {showPauseOpportunitiesModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowPauseOpportunitiesModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Pause Opportunities</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowPauseOpportunitiesModal(false);
+                  setShowPauseDetails(false);
+                }}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              {!showPauseDetails ? (
+                <>
+                  {/* Main Stats - Compact View */}
+                  <div className="pause-main-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Total</span>
+                      <span className="stat-number">128,742</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Today</span>
+                      <span className="stat-number">3,214</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Last 7 Days</span>
+                      <span className="stat-number">21,884</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Active Publishers</span>
+                      <span className="stat-number">6</span>
+                    </div>
+                  </div>
+
+                  {/* Details Button */}
+                  <button
+                    className="btn-details"
+                    onClick={() => setShowPauseDetails(true)}
+                  >
+                    Details →
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Detailed View */}
+                  <div className="pause-description">
+                    <p>
+                      <strong>Counting Criteria:</strong> Only pause events where the video reached 100% completion 
+                      and the QR code was rendered and viewable are counted.
+                    </p>
+                    <p><strong>Data Range:</strong> Jan 1–5, 2026</p>
+                  </div>
+
+                  {/* Publisher Distribution */}
+                  <div className="pause-section">
+                    <h3>Publisher Distribution</h3>
+                    <div className="publisher-distribution">
+                      <span className="pub-item">Tubi 312</span>
+                      <span className="pub-separator">/</span>
+                      <span className="pub-item">Pluto TV 128</span>
+                      <span className="pub-separator">/</span>
+                      <span className="pub-item">Roku Channel 60</span>
+                    </div>
+                  </div>
+
+                  {/* Back Button */}
+                  <button
+                    className="btn-back"
+                    onClick={() => setShowPauseDetails(false)}
+                  >
+                    ← Back
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setShowPauseOpportunitiesModal(false);
+                  setShowPauseDetails(false);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Verified Conversions Modal */}
+      {showVerifiedConversionsModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowVerifiedConversionsModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Verified Conversions</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowVerifiedConversionsModal(false);
+                  setShowConversionsDetails(false);
+                }}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              {!showConversionsDetails ? (
+                <>
+                  {/* Main Stats - Compact View */}
+                  <div className="pause-main-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Total</span>
+                      <span className="stat-number">9,486</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Today</span>
+                      <span className="stat-number">214</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Last 7 Days</span>
+                      <span className="stat-number">1,482</span>
+                    </div>
+                    <div className="stat-divider">|</div>
+                    <div className="stat-item">
+                      <span className="stat-label">Conversion Rate</span>
+                      <span className="stat-number">7.37%</span>
+                    </div>
+                  </div>
+
+                  {/* Details Button */}
+                  <button
+                    className="btn-details"
+                    onClick={() => setShowConversionsDetails(true)}
+                  >
+                    Details →
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Detailed View */}
+                  <div className="conversions-details">
+                    <div className="detail-section">
+                      <p><strong>Date Range:</strong> Jan 1–5, 2026</p>
+                      <p><strong>Verified Conversions:</strong> 500</p>
+                      <p><strong>Status:</strong> Verified • Billable • Settled</p>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Delivery Source</h4>
+                      <p>CTV Pause Ads → QR Scan → Mobile Completion</p>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Publisher Distribution</h4>
+                      <div className="publisher-distribution">
+                        <span className="pub-item">Tubi 312</span>
+                        <span className="pub-separator">/</span>
+                        <span className="pub-item">Pluto TV 128</span>
+                        <span className="pub-separator">/</span>
+                        <span className="pub-item">Roku Channel 60</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Creative Performance (iVPP Micro-Com)</h4>
+                      <div className="creative-performance">
+                        <span className="creative-item">Micro-Com #12 214</span>
+                        <span className="creative-separator">|</span>
+                        <span className="creative-item">Micro-Com #18 286</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Quality Controls</h4>
+                      <div className="quality-controls">
+                        <span className="quality-item">Unique Conversion IDs 500</span>
+                        <span className="quality-separator">|</span>
+                        <span className="quality-item">Duplicates 0</span>
+                        <span className="quality-separator">|</span>
+                        <span className="quality-item">Invalid Traffic 0</span>
+                      </div>
+                    </div>
+
+                    <div className="detail-section audit-statement">
+                      <h4>Audit Statement</h4>
+                      <p>All conversions shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
+                    </div>
+                  </div>
+
+                  {/* Back Button */}
+                  <button
+                    className="btn-back"
+                    onClick={() => setShowConversionsDetails(false)}
+                  >
+                    ← Back
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setShowVerifiedConversionsModal(false);
+                  setShowConversionsDetails(false);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Wallet (Verified Spend) Modal */}
+      {showWalletModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowWalletModal(false)}
+        >
+          <div
+            className="modal-large wallet-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Wallet (Verified Spend)</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowWalletModal(false);
+                  setShowWalletDetails(false);
+                  setExpandedPublisher(null);
+                }}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              {!showWalletDetails ? (
+                <>
+                  {/* Default Advertiser View */}
+                  <div className="wallet-summary">
+                    <div className="wallet-card">
+                      <div className="wallet-label">Wallet Balance</div>
+                      <div className="wallet-amount">$18,420.00</div>
+                      <div className="wallet-status">Available</div>
+                    </div>
+                    <div className="wallet-card">
+                      <div className="wallet-label">Verified Conversions</div>
+                      <div className="wallet-amount">2,614</div>
+                      <div className="wallet-status">total</div>
+                    </div>
+                    <div className="wallet-card">
+                      <div className="wallet-label">Average Conversion Fee</div>
+                      <div className="wallet-amount">$7.04</div>
+                      <div className="wallet-status">per conversion (Variable: $5.00 – $8.00)</div>
+                    </div>
+                  </div>
+
+                  {/* View Details Button */}
+                  <button
+                    className="btn-details"
+                    onClick={() => setShowWalletDetails(true)}
+                  >
+                    View Details →
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Detailed View - Publisher Breakdown */}
+                  <div className="wallet-details">
+                    <h3>Verified Spend by Publisher</h3>
+                    <div className="publisher-table-wrapper">
+                      <table className="publisher-spend-table">
+                        <thead>
+                          <tr>
+                            <th>Publisher</th>
+                            <th>Verified Conversions</th>
+                            <th>Avg Conversion Fee</th>
+                            <th>Total Spend</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { name: 'Tubi', conversions: 1142, fee: 7.12, total: 8132.00 },
+                            { name: 'Hulu', conversions: 768, fee: 6.85, total: 5260.80 },
+                            { name: 'Pluto TV', conversions: 412, fee: 7.44, total: 3067.00 },
+                            { name: 'Roku Channel', conversions: 292, fee: 6.93, total: 1960.00 }
+                          ].map((pub) => (
+                            <React.Fragment key={pub.name}>
+                              <tr className="publisher-row">
+                                <td>{pub.name}</td>
+                                <td>{pub.conversions.toLocaleString()}</td>
+                                <td>${pub.fee.toFixed(2)}</td>
+                                <td className="total-spend">${pub.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                <td>
+                                  <button
+                                    className="expand-btn"
+                                    onClick={() => setExpandedPublisher(expandedPublisher === pub.name ? null : pub.name)}
+                                  >
+                                    {expandedPublisher === pub.name ? '▼' : '▶'}
+                                  </button>
+                                </td>
+                              </tr>
+                              {expandedPublisher === pub.name && (
+                                <tr className="expanded-row">
+                                  <td colSpan="5">
+                                    <div className="publisher-details">
+                                      <div className="detail-item">
+                                        <span className="detail-label">Date Range:</span>
+                                        <span className="detail-value">Jan 1–5, 2026</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Device Type:</span>
+                                        <span className="detail-value">CTV → Mobile QR scan</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Content Environment:</span>
+                                        <span className="detail-value">Show / Genre</span>
+                                      </div>
+                                      <div className="detail-item">
+                                        <span className="detail-label">Conversion Status:</span>
+                                        <span className="detail-value">Verified</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          ))}
+                          <tr className="total-row">
+                            <td><strong>Total</strong></td>
+                            <td><strong>2,614</strong></td>
+                            <td><strong>$7.04</strong></td>
+                            <td className="total-spend"><strong>$18,420.00</strong></td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Back Button */}
+                  <button
+                    className="btn-back"
+                    onClick={() => {
+                      setShowWalletDetails(false);
+                      setExpandedPublisher(null);
+                    }}
+                  >
+                    ← Back
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setShowWalletModal(false);
+                  setShowWalletDetails(false);
+                  setExpandedPublisher(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attention Spotlight Modal */}
+      {showAttentionSpotlightModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAttentionSpotlightModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Attention Spotlight</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowAttentionSpotlightModal(false);
+                  setShowAttentionDetails(false);
+                }}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              {!showAttentionDetails ? (
+                <>
+                  {/* Compact View */}
+                  <div className="attention-metrics-compact">
+                    <div className="attention-metric-row">
+                      <span className="metric-name">Attention-to-Action Rate (A2AR)</span>
+                      <span className="metric-result">Exceptional</span>
+                    </div>
+                    <div className="attention-metric-row">
+                      <span className="metric-name">Attention Scan Velocity (ASV)</span>
+                      <span className="metric-result">Strong</span>
+                    </div>
+                    <div className="attention-metric-row">
+                      <span className="metric-name">Attention Composite Index (ACI)</span>
+                      <span className="metric-result">Exceptional</span>
+                    </div>
+                  </div>
+
+                  {/* Details Button */}
+                  <button
+                    className="btn-details"
+                    onClick={() => setShowAttentionDetails(true)}
+                  >
+                    Details →
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Detailed View */}
+                  <div className="attention-details">
+                    <div className="detail-section">
+                      <p><strong>Date Range:</strong> Jan 1-5, 2026</p>
+                    </div>
+
+                    <div className="detail-section">
+                      <p><strong>Spotlight on Attention metrics are updated in real time</strong></p>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Attention-to-Action Rate (A2AR) = Verified QR Conversions ÷ Valid Pause Opportunities</h4>
+                      <div className="metric-calculation-box">
+                        <div className="calc-row">
+                          <span className="calc-label">Valid Pause Opportunities</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row">
+                          <span className="calc-label">Verified QR Conversions</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row calc-result">
+                          <span className="calc-label">A2AR</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                      </div>
+                      <table className="tier-reference-table">
+                        <thead>
+                          <tr>
+                            <th>Level</th>
+                            <th>Description</th>
+                            <th>Range</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>1</td>
+                            <td>Low</td>
+                            <td>0.2% - 0.4%</td>
+                          </tr>
+                          <tr>
+                            <td>2</td>
+                            <td>Fair</td>
+                            <td>0.5% - 0.7%</td>
+                          </tr>
+                          <tr>
+                            <td>3</td>
+                            <td>Average</td>
+                            <td>0.8% - 1.5%</td>
+                          </tr>
+                          <tr>
+                            <td>4</td>
+                            <td>Strong</td>
+                            <td>1.6% - 2.5%</td>
+                          </tr>
+                          <tr>
+                            <td>5</td>
+                            <td>Exceptional</td>
+                            <td>2.6% - 3.0%+</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Attention Scan Velocity (ASV) = The Time QR Appeared and Time To Download</h4>
+                      <div className="metric-calculation-box">
+                        <div className="calc-row">
+                          <span className="calc-label">QR Appearance</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row">
+                          <span className="calc-label">Download Range</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row calc-result">
+                          <span className="calc-label">ASV</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row" style={{ borderBottom: 'none', paddingTop: '8px' }}>
+                          <span className="calc-label"></span>
+                          <span className="calc-value" style={{ borderBottom: 'none' }}></span>
+                        </div>
+                      </div>
+                      <table className="tier-reference-table">
+                        <thead>
+                          <tr>
+                            <th>Level</th>
+                            <th>Description</th>
+                            <th>Range</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>1</td>
+                            <td>Low</td>
+                            <td>&gt; 20 sec</td>
+                          </tr>
+                          <tr>
+                            <td>2</td>
+                            <td>Fair</td>
+                            <td>15 - 20 sec</td>
+                          </tr>
+                          <tr>
+                            <td>3</td>
+                            <td>Average</td>
+                            <td>10 - 15 sec</td>
+                          </tr>
+                          <tr>
+                            <td>4</td>
+                            <td>Strong</td>
+                            <td>5 - 10 sec</td>
+                          </tr>
+                          <tr>
+                            <td>5</td>
+                            <td>Exceptional</td>
+                            <td>&lt; 5 sec</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Attention Composite Index (ACI) = Attention-to-Action Rate + Attention Scan Velocity</h4>
+                      <div className="metric-calculation-box">
+                        <div className="calc-row">
+                          <span className="calc-label">A2AR</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row">
+                          <span className="calc-label">ASV</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row calc-result">
+                          <span className="calc-label">ACI</span>
+                          <span className="calc-value">_______</span>
+                        </div>
+                        <div className="calc-row" style={{ borderBottom: 'none', paddingTop: '8px' }}>
+                          <span className="calc-label"></span>
+                          <span className="calc-value" style={{ borderBottom: 'none' }}></span>
+                        </div>
+                      </div>
+                      <table className="tier-reference-table">
+                        <thead>
+                          <tr>
+                            <th>Level</th>
+                            <th>Description</th>
+                            <th>Range</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>1</td>
+                            <td>Low</td>
+                            <td>2 - 3</td>
+                          </tr>
+                          <tr>
+                            <td>2</td>
+                            <td>Fair</td>
+                            <td>4 - 5</td>
+                          </tr>
+                          <tr>
+                            <td>3</td>
+                            <td>Average</td>
+                            <td>6 - 7</td>
+                          </tr>
+                          <tr>
+                            <td>4</td>
+                            <td>Strong</td>
+                            <td>8 - 9</td>
+                          </tr>
+                          <tr>
+                            <td>5</td>
+                            <td>Exceptional</td>
+                            <td>9 - 10</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Back Button */}
+                  <button
+                    className="btn-back"
+                    onClick={() => setShowAttentionDetails(false)}
+                  >
+                    ← Back
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setShowAttentionSpotlightModal(false);
+                  setShowAttentionDetails(false);
+                }}
+              >
+                Close
               </button>
             </div>
           </div>
