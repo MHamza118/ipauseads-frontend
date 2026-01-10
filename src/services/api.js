@@ -19,7 +19,7 @@
 import axios from "axios";
 
 // Use the backend URL from env or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL || "https://ipauseads.com/api";
 
 const api = axios.create({
   baseURL: API_URL,
