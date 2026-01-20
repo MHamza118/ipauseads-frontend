@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import { Archive } from "lucide-react";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState({
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [showPauseDetails, setShowPauseDetails] = useState(false);
   const [showVerifiedConversionsModal, setShowVerifiedConversionsModal] = useState(false);
   const [showConversionsDetails, setShowConversionsDetails] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showWalletDetails, setShowWalletDetails] = useState(false);
   const [expandedPublisher, setExpandedPublisher] = useState(null);
@@ -1092,13 +1094,27 @@ export default function Dashboard() {
                     </div>
 
                     <div className="detail-section">
-                      <h4>Quality Controls</h4>
+                      <div className="quality-controls-header">
+                        <h4>Quality Controls</h4>
+                        <span className="quality-meta-item">Timestamp: Past 7 Days: 1,482</span>
+                        <span className="quality-meta-separator">|</span>
+                        <span className="quality-meta-item">Past 30 Days: 4,156</span>
+                      </div>
                       <div className="quality-controls">
                         <span className="quality-item">Unique Conversion IDs 500</span>
                         <span className="quality-separator">|</span>
                         <span className="quality-item">Duplicates 0</span>
                         <span className="quality-separator">|</span>
-                        <span className="quality-item">Invalid Traffic 0</span>
+                        <span className="quality-item-with-icon">
+                          <span>Invalid Traffic 0</span>
+                          <button 
+                            className="archive-btn"
+                            onClick={() => setShowArchiveModal(true)}
+                            title="View Archived Data"
+                          >
+                            <Archive size={18} />
+                          </button>
+                        </span>
                       </div>
                     </div>
 
@@ -1549,6 +1565,110 @@ export default function Dashboard() {
                   setShowAttentionSpotlightModal(false);
                   setShowAttentionDetails(false);
                 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Modal */}
+      {showArchiveModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowArchiveModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2><Archive size={24} style={{ display: 'inline-block', marginRight: '8px' }} /> Archived Data</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowArchiveModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="archive-info">
+                <p><strong>Data Older Than 30 Days</strong></p>
+                <p className="archive-description">
+                  This section contains archived timestamps and conversion data from more than 30 days ago.
+                </p>
+              </div>
+
+              <div className="archive-stats">
+                <div className="archive-stat-card">
+                  <div className="stat-label">Total Archived Records</div>
+                  <div className="stat-value">12,847</div>
+                </div>
+                <div className="archive-stat-card">
+                  <div className="stat-label">Date Range</div>
+                  <div className="stat-value">Dec 1 - Dec 31, 2025</div>
+                </div>
+                <div className="archive-stat-card">
+                  <div className="stat-label">Storage Location</div>
+                  <div className="stat-value">Archive DB</div>
+                </div>
+              </div>
+
+              <div className="archive-table-section">
+                <h3>Archived Conversions</h3>
+                <table className="archive-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Conversions</th>
+                      <th>Duplicates</th>
+                      <th>Invalid Traffic</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Dec 31, 2025</td>
+                      <td>342</td>
+                      <td>12</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Dec 30, 2025</td>
+                      <td>298</td>
+                      <td>8</td>
+                      <td>2</td>
+                    </tr>
+                    <tr>
+                      <td>Dec 29, 2025</td>
+                      <td>315</td>
+                      <td>10</td>
+                      <td>4</td>
+                    </tr>
+                    <tr>
+                      <td>Dec 28, 2025</td>
+                      <td>267</td>
+                      <td>6</td>
+                      <td>1</td>
+                    </tr>
+                    <tr>
+                      <td>Dec 27, 2025</td>
+                      <td>289</td>
+                      <td>9</td>
+                      <td>2</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowArchiveModal(false)}
               >
                 Close
               </button>
