@@ -31,6 +31,11 @@ export default function Dashboard() {
   const [expandedPublisher, setExpandedPublisher] = useState(null);
   const [showAttentionSpotlightModal, setShowAttentionSpotlightModal] = useState(false);
   const [showAttentionDetails, setShowAttentionDetails] = useState(false);
+  const [showTimestampModal, setShowTimestampModal] = useState(false);
+  const [timestampPeriod, setTimestampPeriod] = useState(null); // 'past7' or 'past30'
+  const [showConversionIdsModal, setShowConversionIdsModal] = useState(false);
+  const [showDuplicatesModal, setShowDuplicatesModal] = useState(false);
+  const [showInvalidTrafficModal, setShowInvalidTrafficModal] = useState(false);
 
   // Filter states (still used for analytics summary)
   const [filters, setFilters] = useState({
@@ -1096,25 +1101,56 @@ export default function Dashboard() {
                     <div className="detail-section">
                       <div className="quality-controls-header">
                         <h4>Quality Controls</h4>
-                        <span className="quality-meta-item">Timestamp: Past 7 Days: 1,482</span>
+                        <span className="quality-meta-item">Timestamp:</span>
+                        <button 
+                          className="quality-meta-button"
+                          onClick={() => {
+                            setTimestampPeriod('past7');
+                            setShowTimestampModal(true);
+                          }}
+                        >
+                          Past 7 Days
+                        </button>
                         <span className="quality-meta-separator">|</span>
-                        <span className="quality-meta-item">Past 30 Days: 4,156</span>
+                        <button 
+                          className="quality-meta-button"
+                          onClick={() => {
+                            setTimestampPeriod('past30');
+                            setShowTimestampModal(true);
+                          }}
+                        >
+                          Past 30 Days
+                        </button>
                       </div>
                       <div className="quality-controls">
-                        <span className="quality-item">Unique Conversion IDs 500</span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => setShowConversionIdsModal(true)}
+                        >
+                          Unique Conversion IDs
+                        </button>
                         <span className="quality-separator">|</span>
-                        <span className="quality-item">Duplicates 0</span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => setShowDuplicatesModal(true)}
+                        >
+                          Duplicates
+                        </button>
                         <span className="quality-separator">|</span>
-                        <span className="quality-item-with-icon">
-                          <span>Invalid Traffic 0</span>
-                          <button 
-                            className="archive-btn"
-                            onClick={() => setShowArchiveModal(true)}
-                            title="View Archived Data"
-                          >
-                            <Archive size={18} />
-                          </button>
-                        </span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => setShowInvalidTrafficModal(true)}
+                        >
+                          Invalid Traffic
+                        </button>
+                        <button 
+                          className="archive-btn"
+                          onClick={() => setShowArchiveModal(true)}
+                          title="View Archived Data"
+                          style={{ marginLeft: '12px' }}
+                        >
+                          <Archive size={18} />
+                        </button>
                       </div>
                     </div>
 
@@ -1669,6 +1705,976 @@ export default function Dashboard() {
               <button
                 className="btn secondary"
                 onClick={() => setShowArchiveModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invalid Traffic Modal */}
+      {showInvalidTrafficModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowInvalidTrafficModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Invalid Traffic Detection</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowInvalidTrafficModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="invalid-traffic-info">
+                <p>
+                  <strong>Total Invalid Traffic Detected: 8</strong>
+                </p>
+                <p className="invalid-traffic-description">
+                  Invalid traffic includes bot/fraudulent activity - potential bots taking pictures without actual eye pause ads or suspicious scanning patterns.
+                </p>
+                <p className="invalid-traffic-description">
+                  Date Range: Jan 1–5, 2026
+                </p>
+              </div>
+
+              <div className="invalid-traffic-table-section">
+                <h3>Suspicious Activity Log</h3>
+                <table className="invalid-traffic-table">
+                  <thead>
+                    <tr>
+                      <th>Device IP</th>
+                      <th>Scan Time</th>
+                      <th>Activity Type</th>
+                      <th>Risk Level</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>203.0.113.45</td>
+                      <td>Jan 5, 14:32:15</td>
+                      <td>Rapid Sequential Scans</td>
+                      <td><span className="risk-high">High</span></td>
+                      <td>50+ scans in 10 seconds</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>198.51.100.78</td>
+                      <td>Jan 5, 13:47:33</td>
+                      <td>Bot Pattern Detected</td>
+                      <td><span className="risk-high">High</span></td>
+                      <td>Automated scanning pattern detected</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.0.2.12</td>
+                      <td>Jan 5, 12:58:47</td>
+                      <td>Unusual Geolocation</td>
+                      <td><span className="risk-medium">Medium</span></td>
+                      <td>Multiple countries in 5 minutes</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>203.0.113.102</td>
+                      <td>Jan 4, 15:19:28</td>
+                      <td>Rapid Sequential Scans</td>
+                      <td><span className="risk-high">High</span></td>
+                      <td>100+ scans in 30 seconds</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>198.51.100.56</td>
+                      <td>Jan 4, 14:56:03</td>
+                      <td>Suspicious User Agent</td>
+                      <td><span className="risk-medium">Medium</span></td>
+                      <td>Known bot user agent detected</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.0.2.89</td>
+                      <td>Jan 4, 14:32:17</td>
+                      <td>Proxy/VPN Usage</td>
+                      <td><span className="risk-medium">Medium</span></td>
+                      <td>Traffic from known proxy service</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>203.0.113.34</td>
+                      <td>Jan 3, 13:45:22</td>
+                      <td>Bot Pattern Detected</td>
+                      <td><span className="risk-high">High</span></td>
+                      <td>Consistent 2-second interval scans</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                    <tr>
+                      <td>198.51.100.67</td>
+                      <td>Jan 2, 12:58:14</td>
+                      <td>Rapid Sequential Scans</td>
+                      <td><span className="risk-high">High</span></td>
+                      <td>75+ scans in 15 seconds</td>
+                      <td><span className="badge-invalid">Invalid</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="invalid-traffic-categories">
+                <h3>Invalid Traffic Categories</h3>
+                <div className="category-grid">
+                  <div className="category-card">
+                    <div className="category-title">Rapid Sequential Scans</div>
+                    <div className="category-count">3</div>
+                    <p>Multiple scans from same IP in very short timeframe (seconds)</p>
+                  </div>
+                  <div className="category-card">
+                    <div className="category-title">Bot Pattern Detected</div>
+                    <div className="category-count">2</div>
+                    <p>Automated scanning patterns with consistent intervals</p>
+                  </div>
+                  <div className="category-card">
+                    <div className="category-title">Suspicious User Agent</div>
+                    <div className="category-count">1</div>
+                    <p>Known bot or crawler user agents detected</p>
+                  </div>
+                  <div className="category-card">
+                    <div className="category-title">Unusual Geolocation</div>
+                    <div className="category-count">1</div>
+                    <p>Impossible travel patterns or multiple countries</p>
+                  </div>
+                  <div className="category-card">
+                    <div className="category-title">Proxy/VPN Usage</div>
+                    <div className="category-count">1</div>
+                    <p>Traffic from known proxy or VPN services</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="invalid-traffic-note">
+                <p>
+                  <strong>Note:</strong> Invalid traffic detection is a placeholder feature demonstrating fraud prevention capabilities. The system identifies suspicious patterns to protect advertisers from fraudulent charges. Perfect accuracy is not guaranteed at this stage, but the system will evolve with more sophisticated detection algorithms.
+                </p>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowInvalidTrafficModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conversion IDs Modal */}
+      {showConversionIdsModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowConversionIdsModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Unique Conversion IDs</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowConversionIdsModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="conversion-ids-info">
+                <p>
+                  <strong>Total Unique Conversion IDs: 500</strong>
+                </p>
+                <p className="conversion-ids-description">
+                  Date Range: Jan 1–5, 2026
+                </p>
+              </div>
+
+              <div className="conversion-ids-table-section">
+                <h3>Conversion ID List</h3>
+                <table className="conversion-ids-table">
+                  <thead>
+                    <tr>
+                      <th>Conversion ID</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>CONV-2026-001847</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:32:15</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001846</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:28:42</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001845</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:15:09</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001844</td>
+                      <td>Jan 5, 2026</td>
+                      <td>13:47:33</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001843</td>
+                      <td>Jan 5, 2026</td>
+                      <td>13:22:18</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001842</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:58:47</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001841</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:34:21</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001840</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:11:55</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001839</td>
+                      <td>Jan 5, 2026</td>
+                      <td>11:47:12</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001838</td>
+                      <td>Jan 5, 2026</td>
+                      <td>11:23:44</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001837</td>
+                      <td>Jan 4, 2026</td>
+                      <td>15:19:28</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001836</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:56:03</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001835</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:32:17</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001834</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:08:51</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001833</td>
+                      <td>Jan 4, 2026</td>
+                      <td>13:45:22</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001832</td>
+                      <td>Jan 4, 2026</td>
+                      <td>13:21:39</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001831</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:58:14</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001830</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:34:47</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001829</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:11:25</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001828</td>
+                      <td>Jan 4, 2026</td>
+                      <td>11:47:58</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowConversionIdsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicates Modal */}
+      {showDuplicatesModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowDuplicatesModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Duplicate QR Code Scans</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowDuplicatesModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="duplicates-info">
+                <p>
+                  <strong>Total Duplicate Scans: 12</strong>
+                </p>
+                <p className="duplicates-description">
+                  Multiple scans from the same device/camera IP within 2-3 seconds are counted as duplicates.
+                </p>
+                <p className="duplicates-description">
+                  Date Range: Jan 1–5, 2026
+                </p>
+              </div>
+
+              <div className="duplicates-table-section">
+                <h3>Duplicate Scan Groups</h3>
+                <table className="duplicates-table">
+                  <thead>
+                    <tr>
+                      <th>Device IP</th>
+                      <th>QR Code</th>
+                      <th>First Scan</th>
+                      <th>Duplicate Count</th>
+                      <th>Time Window</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>192.168.1.45</td>
+                      <td>testqrcode</td>
+                      <td>Jan 5, 14:32:15</td>
+                      <td>3</td>
+                      <td>2.1 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.78</td>
+                      <td>testqrcode</td>
+                      <td>Jan 5, 13:47:33</td>
+                      <td>2</td>
+                      <td>1.8 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.2.12</td>
+                      <td>testqrcode</td>
+                      <td>Jan 5, 12:58:47</td>
+                      <td>4</td>
+                      <td>2.9 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.102</td>
+                      <td>testqrcode</td>
+                      <td>Jan 4, 15:19:28</td>
+                      <td>2</td>
+                      <td>1.5 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.3.56</td>
+                      <td>testqrcode</td>
+                      <td>Jan 4, 14:56:03</td>
+                      <td>3</td>
+                      <td>2.3 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.89</td>
+                      <td>testqrcode</td>
+                      <td>Jan 4, 14:32:17</td>
+                      <td>2</td>
+                      <td>1.9 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.2.34</td>
+                      <td>testqrcode</td>
+                      <td>Jan 4, 13:45:22</td>
+                      <td>5</td>
+                      <td>2.7 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.67</td>
+                      <td>testqrcode</td>
+                      <td>Jan 4, 12:58:14</td>
+                      <td>2</td>
+                      <td>1.6 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.3.91</td>
+                      <td>testqrcode</td>
+                      <td>Jan 3, 11:23:44</td>
+                      <td>3</td>
+                      <td>2.4 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.23</td>
+                      <td>testqrcode</td>
+                      <td>Jan 3, 10:15:09</td>
+                      <td>2</td>
+                      <td>1.7 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.2.55</td>
+                      <td>testqrcode</td>
+                      <td>Jan 2, 16:47:33</td>
+                      <td>4</td>
+                      <td>2.8 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                    <tr>
+                      <td>192.168.1.41</td>
+                      <td>testqrcode</td>
+                      <td>Jan 1, 09:32:15</td>
+                      <td>2</td>
+                      <td>1.4 sec</td>
+                      <td><span className="badge-duplicate">Duplicate</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="duplicates-note">
+                <p>
+                  <strong>Note:</strong> Duplicate scans are automatically detected when the same QR code is scanned multiple times from the same device IP within a 2-3 second window. Only the first scan is counted as a valid conversion to prevent fraudulent charges.
+                </p>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowDuplicatesModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conversion IDs Modal */}
+      {showConversionIdsModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowConversionIdsModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Unique Conversion IDs</h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowConversionIdsModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="conversion-ids-info">
+                <p>
+                  <strong>Total Unique Conversion IDs: 500</strong>
+                </p>
+                <p className="conversion-ids-description">
+                  Date Range: Jan 1–5, 2026
+                </p>
+              </div>
+
+              <div className="conversion-ids-table-section">
+                <h3>Conversion ID List</h3>
+                <table className="conversion-ids-table">
+                  <thead>
+                    <tr>
+                      <th>Conversion ID</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>CONV-2026-001847</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:32:15</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001846</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:28:42</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001845</td>
+                      <td>Jan 5, 2026</td>
+                      <td>14:15:09</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001844</td>
+                      <td>Jan 5, 2026</td>
+                      <td>13:47:33</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001843</td>
+                      <td>Jan 5, 2026</td>
+                      <td>13:22:18</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001842</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:58:47</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001841</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:34:21</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001840</td>
+                      <td>Jan 5, 2026</td>
+                      <td>12:11:55</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001839</td>
+                      <td>Jan 5, 2026</td>
+                      <td>11:47:12</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001838</td>
+                      <td>Jan 5, 2026</td>
+                      <td>11:23:44</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001837</td>
+                      <td>Jan 4, 2026</td>
+                      <td>15:19:28</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001836</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:56:03</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001835</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:32:17</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001834</td>
+                      <td>Jan 4, 2026</td>
+                      <td>14:08:51</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001833</td>
+                      <td>Jan 4, 2026</td>
+                      <td>13:45:22</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001832</td>
+                      <td>Jan 4, 2026</td>
+                      <td>13:21:39</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001831</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:58:14</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001830</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:34:47</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001829</td>
+                      <td>Jan 4, 2026</td>
+                      <td>12:11:25</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                      <td>CONV-2026-001828</td>
+                      <td>Jan 4, 2026</td>
+                      <td>11:47:58</td>
+                      <td><span className="badge-verified">Verified</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowConversionIdsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Timestamp Modal - Past 7 Days / Past 30 Days */}
+      {showTimestampModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowTimestampModal(false)}
+        >
+          <div
+            className="modal-large"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>
+                  {timestampPeriod === 'past7' ? 'Past 7 Days' : 'Past 30 Days'} - Conversions
+                </h2>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowTimestampModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body">
+              <div className="timestamp-info">
+                <p className="timestamp-description">
+                  {timestampPeriod === 'past7' 
+                    ? 'Date Range: Jan 1–7, 2026' 
+                    : 'Date Range: Dec 2, 2025 – Jan 1, 2026'}
+                </p>
+              </div>
+
+              <div className="timestamp-table-section">
+                <h3>QR Code Scans</h3>
+                <table className="timestamp-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>QR Code Scanned</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timestampPeriod === 'past7' ? (
+                      <>
+                        <tr>
+                          <td>Jan 7, 2026</td>
+                          <td>14:32:15</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 7, 2026</td>
+                          <td>13:47:33</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 7, 2026</td>
+                          <td>12:58:47</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 6, 2026</td>
+                          <td>15:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 6, 2026</td>
+                          <td>14:56:03</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 6, 2026</td>
+                          <td>14:32:17</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 6, 2026</td>
+                          <td>13:45:22</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 5, 2026</td>
+                          <td>12:58:14</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 5, 2026</td>
+                          <td>11:23:44</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 5, 2026</td>
+                          <td>10:15:09</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 4, 2026</td>
+                          <td>16:47:33</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 4, 2026</td>
+                          <td>15:32:15</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 4, 2026</td>
+                          <td>14:28:42</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 3, 2026</td>
+                          <td>13:22:18</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 3, 2026</td>
+                          <td>12:34:21</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 2, 2026</td>
+                          <td>11:47:12</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 2, 2026</td>
+                          <td>10:23:44</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 1, 2026</td>
+                          <td>09:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 1, 2026</td>
+                          <td>08:56:03</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 1, 2026</td>
+                          <td>07:32:17</td>
+                          <td>testqrcode</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr>
+                          <td>Jan 1, 2026</td>
+                          <td>09:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Jan 1, 2026</td>
+                          <td>08:56:03</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 31, 2025</td>
+                          <td>17:32:15</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 31, 2025</td>
+                          <td>16:28:42</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 31, 2025</td>
+                          <td>15:22:18</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 30, 2025</td>
+                          <td>14:34:21</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 30, 2025</td>
+                          <td>13:47:12</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 30, 2025</td>
+                          <td>12:23:44</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 29, 2025</td>
+                          <td>11:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 29, 2025</td>
+                          <td>10:56:03</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 28, 2025</td>
+                          <td>09:32:17</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 28, 2025</td>
+                          <td>08:45:22</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 27, 2025</td>
+                          <td>16:58:14</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 27, 2025</td>
+                          <td>15:23:44</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 26, 2025</td>
+                          <td>14:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 26, 2025</td>
+                          <td>13:56:03</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 25, 2025</td>
+                          <td>12:32:17</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 25, 2025</td>
+                          <td>11:45:22</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 24, 2025</td>
+                          <td>10:58:14</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 24, 2025</td>
+                          <td>09:23:44</td>
+                          <td>testqrcode</td>
+                        </tr>
+                        <tr>
+                          <td>Dec 23, 2025</td>
+                          <td>08:19:28</td>
+                          <td>testqrcode</td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'none' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setShowTimestampModal(false)}
               >
                 Close
               </button>
