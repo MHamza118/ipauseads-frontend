@@ -580,6 +580,7 @@
 .quality-separator {
   color: #d1d5db;
   font-weight: 300;
+  margin: 0 16px;
 }
 
 .quality-controls-header {
@@ -1514,14 +1515,19 @@
   color: #0369a1;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  padding: 4px 8px;
   font-size: 12px;
-  text-decoration: underline;
-  transition: color 0.2s;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
 }
 
 .quality-meta-button:hover {
   color: #0c4a6e;
+  background: #f0f9ff;
 }
 
 .quality-item-button {
@@ -1530,14 +1536,19 @@
   color: #0369a1;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  padding: 8px 12px;
   font-size: 13px;
-  text-decoration: underline;
-  transition: color 0.2s;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
 }
 
 .quality-item-button:hover {
   color: #0c4a6e;
+  background: #f0f9ff;
 }
 
 .conversion-ids-info {

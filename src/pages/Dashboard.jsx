@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { Archive } from "lucide-react";
+import { Archive, Calendar, CheckCircle, Copy, AlertTriangle } from "lucide-react";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState({
@@ -1108,8 +1108,9 @@ export default function Dashboard() {
                             setTimestampPeriod('past7');
                             setShowTimestampModal(true);
                           }}
+                          title="Past 7 Days"
                         >
-                          Past 7 Days
+                          <Calendar size={16} />
                         </button>
                         <span className="quality-meta-separator">|</span>
                         <button 
@@ -1118,38 +1119,42 @@ export default function Dashboard() {
                             setTimestampPeriod('past30');
                             setShowTimestampModal(true);
                           }}
+                          title="Past 30 Days"
                         >
-                          Past 30 Days
+                          <Calendar size={16} />
                         </button>
                       </div>
                       <div className="quality-controls">
                         <button 
                           className="quality-item-button"
                           onClick={() => setShowConversionIdsModal(true)}
+                          title="Unique Conversion IDs"
                         >
-                          Unique Conversion IDs
+                          <CheckCircle size={20} />
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
                           className="quality-item-button"
                           onClick={() => setShowDuplicatesModal(true)}
+                          title="Duplicates"
                         >
-                          Duplicates
+                          <Copy size={20} />
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
                           className="quality-item-button"
                           onClick={() => setShowInvalidTrafficModal(true)}
+                          title="Invalid Traffic"
                         >
-                          Invalid Traffic
+                          <AlertTriangle size={20} />
                         </button>
                         <button 
                           className="archive-btn"
                           onClick={() => setShowArchiveModal(true)}
                           title="View Archived Data"
-                          style={{ marginLeft: '12px' }}
+                          style={{ marginLeft: '24px' }}
                         >
-                          <Archive size={18} />
+                          <Archive size={20} />
                         </button>
                       </div>
                     </div>
