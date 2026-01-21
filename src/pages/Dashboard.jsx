@@ -1110,7 +1110,8 @@ export default function Dashboard() {
                           }}
                           title="Past 7 Days"
                         >
-                          <Calendar size={16} />
+                          <Calendar size={14} />
+                          <span>Past 7 Days</span>
                         </button>
                         <span className="quality-meta-separator">|</span>
                         <button 
@@ -1121,7 +1122,8 @@ export default function Dashboard() {
                           }}
                           title="Past 30 Days"
                         >
-                          <Calendar size={16} />
+                          <Calendar size={14} />
+                          <span>Past 30 Days</span>
                         </button>
                       </div>
                       <div className="quality-controls">
@@ -1130,7 +1132,8 @@ export default function Dashboard() {
                           onClick={() => setShowConversionIdsModal(true)}
                           title="Unique Conversion IDs"
                         >
-                          <CheckCircle size={20} />
+                          <CheckCircle size={14} />
+                          <span>Unique Conversion IDs</span>
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
@@ -1138,7 +1141,8 @@ export default function Dashboard() {
                           onClick={() => setShowDuplicatesModal(true)}
                           title="Duplicates"
                         >
-                          <Copy size={20} />
+                          <Copy size={14} />
+                          <span>Duplicates</span>
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
@@ -1146,15 +1150,16 @@ export default function Dashboard() {
                           onClick={() => setShowInvalidTrafficModal(true)}
                           title="Invalid Traffic"
                         >
-                          <AlertTriangle size={20} />
+                          <AlertTriangle size={14} />
+                          <span>Invalid Traffic</span>
                         </button>
+                        <span className="quality-separator">|</span>
                         <button 
-                          className="archive-btn"
+                          className="quality-item-button"
                           onClick={() => setShowArchiveModal(true)}
                           title="View Archived Data"
-                          style={{ marginLeft: '24px' }}
                         >
-                          <Archive size={20} />
+                          <Archive size={14} />
                         </button>
                       </div>
                     </div>

@@ -563,12 +563,13 @@
 .quality-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 4px;
   padding: 12px;
   background: #ffffff;
   border-radius: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .quality-item {
@@ -580,7 +581,7 @@
 .quality-separator {
   color: #d1d5db;
   font-weight: 300;
-  margin: 0 16px;
+  margin: 0 4px;
 }
 
 .quality-controls-header {
@@ -610,6 +611,7 @@
 .quality-meta-separator {
   color: #d1d5db;
   font-weight: 300;
+  margin: 0 4px;
 }
 
 .audit-statement {
@@ -1523,11 +1525,17 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .quality-meta-button:hover {
   color: #0c4a6e;
   background: #f0f9ff;
+}
+
+.quality-meta-button span {
+  display: inline;
 }
 
 .quality-item-button {
@@ -1536,19 +1544,25 @@
   color: #0369a1;
   font-weight: 600;
   cursor: pointer;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 4px 8px;
+  font-size: 12px;
   text-decoration: none;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 4px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .quality-item-button:hover {
   color: #0c4a6e;
   background: #f0f9ff;
+}
+
+.quality-item-button span {
+  display: inline;
 }
 
 .conversion-ids-info {
