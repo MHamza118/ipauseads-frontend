@@ -25,6 +25,10 @@ export default function Dashboard() {
   const [showPauseDetails, setShowPauseDetails] = useState(false);
   const [showVerifiedConversionsModal, setShowVerifiedConversionsModal] = useState(false);
   const [showConversionsDetails, setShowConversionsDetails] = useState(false);
+  const [verifiedConversions, setVerifiedConversions] = useState([]);
+  const [conversionsLoading, setConversionsLoading] = useState(false);
+  const [conversionsError, setConversionsError] = useState(null);
+  const [conversionsPeriod, setConversionsPeriod] = useState(7);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showWalletDetails, setShowWalletDetails] = useState(false);
@@ -119,6 +123,30 @@ export default function Dashboard() {
       alert("Failed to load spotlight data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVerifiedConversions = async (days = 7) => {
+    try {
+      setConversionsLoading(true);
+      setConversionsError(null);
+      
+      // Fetch conversions for STARBUCKS category (or all user's categories)
+      const res = await api.get(`/scans/verified-conversions`, {
+        params: {
+          categoryId: 'STARBUCKS',
+          days: days
+        }
+      });
+
+      if (res.data.ok) {
+        setVerifiedConversions(res.data.conversions || []);
+      }
+    } catch (error) {
+      console.error("Error fetching verified conversions:", error);
+      setConversionsError(error.response?.data?.error || "Failed to load verified conversions");
+    } finally {
+      setConversionsLoading(false);
     }
   };
 
@@ -457,7 +485,10 @@ export default function Dashboard() {
                     <th>
                       <button 
                         className="header-button"
-                        onClick={() => setShowVerifiedConversionsModal(true)}
+                        onClick={() => {
+                          setShowVerifiedConversionsModal(true);
+                          fetchVerifiedConversions(7);
+                        }}
                       >
                         Verified Conversions
                       </button>
@@ -1016,7 +1047,8 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Verified Conversions</h2>
+                <h2>Verified Conversions - QR Scans</h2>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Real-time conversion events from QR code scans</p>
               </div>
               <button
                 className="close-btn"
@@ -1035,66 +1067,135 @@ export default function Dashboard() {
                   {/* Main Stats - Compact View */}
                   <div className="pause-main-stats">
                     <div className="stat-item">
-                      <span className="stat-label">Total</span>
-                      <span className="stat-number">9,486</span>
+                      <span className="stat-label">Total Conversions</span>
+                      <span className="stat-number">{verifiedConversions.length}</span>
                     </div>
                     <div className="stat-divider">|</div>
                     <div className="stat-item">
-                      <span className="stat-label">Today</span>
-                      <span className="stat-number">214</span>
+                      <span className="stat-label">Period</span>
+                      <span className="stat-number">Past 7 Days</span>
                     </div>
                     <div className="stat-divider">|</div>
                     <div className="stat-item">
-                      <span className="stat-label">Last 7 Days</span>
-                      <span className="stat-number">1,482</span>
-                    </div>
-                    <div className="stat-divider">|</div>
-                    <div className="stat-item">
-                      <span className="stat-label">Conversion Rate</span>
-                      <span className="stat-number">7.37%</span>
+                      <span className="stat-label">Status</span>
+                      <span className="stat-number" style={{ color: '#10b981' }}>Live</span>
                     </div>
                   </div>
 
+                  {/* Loading State */}
+                  {conversionsLoading && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                      <div className="spinner"></div>
+                      <p>Loading verified conversions...</p>
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {conversionsError && (
+                    <div style={{ padding: '20px', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '16px' }}>
+                      <p><strong>Error:</strong> {conversionsError}</p>
+                    </div>
+                  )}
+
+                  {/* Live Feed Table */}
+                  {!conversionsLoading && verifiedConversions.length > 0 && (
+                    <div style={{ marginTop: '20px', overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '2px solid #e5e7eb', background: '#f9fafb' }}>
+                            <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Timestamp</th>
+                            <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>City</th>
+                            <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Device</th>
+                            <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Category</th>
+                            <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Visitor Type</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {verifiedConversions.map((conv, idx) => {
+                            const timestamp = new Date(conv.timestamp);
+                            const timeStr = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            const dateStr = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            return (
+                              <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                <td style={{ padding: '12px' }}>
+                                  <div style={{ fontSize: '12px', fontWeight: '500' }}>{timeStr}</div>
+                                  <div style={{ fontSize: '11px', color: '#666' }}>{dateStr}</div>
+                                </td>
+                                <td style={{ padding: '12px' }}>
+                                  <span style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                                    {conv.city}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '12px', fontSize: '12px' }}>
+                                  {conv.formattedDevice}
+                                </td>
+                                <td style={{ padding: '12px', fontSize: '12px', fontWeight: '500' }}>
+                                  {conv.categoryId}
+                                </td>
+                                <td style={{ padding: '12px', fontSize: '12px' }}>
+                                  <span style={{ background: conv.isNewVisitor ? '#dcfce7' : '#fef3c7', color: conv.isNewVisitor ? '#166534' : '#92400e', padding: '4px 8px', borderRadius: '4px' }}>
+                                    {conv.isNewVisitor ? 'New' : 'Returning'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!conversionsLoading && verifiedConversions.length === 0 && !conversionsError && (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+                      <p style={{ fontSize: '14px', marginBottom: '8px' }}>No verified conversions yet</p>
+                      <p style={{ fontSize: '12px', color: '#999' }}>Scan a QR code and log in to see conversions appear here</p>
+                    </div>
+                  )}
+
                   {/* Details Button */}
-                  <button
-                    className="btn-details"
-                    onClick={() => setShowConversionsDetails(true)}
-                  >
-                    Details →
-                  </button>
+                  {verifiedConversions.length > 0 && (
+                    <button
+                      className="btn-details"
+                      onClick={() => setShowConversionsDetails(true)}
+                      style={{ marginTop: '16px' }}
+                    >
+                      Quality Controls →
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
                   {/* Detailed View */}
                   <div className="conversions-details">
                     <div className="detail-section">
-                      <p><strong>Date Range:</strong> Jan 1–5, 2026</p>
-                      <p><strong>Verified Conversions:</strong> 500</p>
-                      <p><strong>Status:</strong> Verified • Billable • Settled</p>
+                      <p><strong>Total Verified Conversions:</strong> {verifiedConversions.length}</p>
+                      <p><strong>Period:</strong> Past 7 Days</p>
+                      <p><strong>Status:</strong> <span style={{ color: '#10b981' }}>Verified • Real-time • Live</span></p>
                     </div>
 
                     <div className="detail-section">
-                      <h4>Delivery Source</h4>
-                      <p>CTV Pause Ads → QR Scan → Mobile Completion</p>
+                      <h4>Proof of Concept - Real Conversion Events</h4>
+                      <p>Every QR scan generates a rich event record with real, credible signals:</p>
+                      <ul style={{ marginLeft: '20px', marginTop: '8px', fontSize: '13px', lineHeight: '1.6' }}>
+                        <li>🕒 Timestamp (date + time to the second)</li>
+                        <li>🌍 Approximate location (city / DMA level)</li>
+                        <li>📱 Device type (mobile OS, browser, etc.)</li>
+                        <li>🔗 Category ID (which QR code was scanned)</li>
+                        <li>🔁 New vs returning visitor (cookie / session based)</li>
+                      </ul>
                     </div>
 
                     <div className="detail-section">
-                      <h4>Publisher Distribution</h4>
-                      <div className="publisher-distribution">
-                        <span className="pub-item">Tubi 312</span>
-                        <span className="pub-separator">/</span>
-                        <span className="pub-item">Pluto TV 128</span>
-                        <span className="pub-separator">/</span>
-                        <span className="pub-item">Roku Channel 60</span>
-                      </div>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4>Creative Performance (iVPP Micro-Com)</h4>
-                      <div className="creative-performance">
-                        <span className="creative-item">Micro-Com #12 214</span>
-                        <span className="creative-separator">|</span>
-                        <span className="creative-item">Micro-Com #18 286</span>
+                      <h4>Live Feed - Recent Interactions</h4>
+                      <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                        "Someone in {verifiedConversions.length > 0 ? verifiedConversions[0].city : 'Austin'} just scanned. Someone in {verifiedConversions.length > 1 ? verifiedConversions[1].city : 'NYC'} just scanned."
+                      </p>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '12px', fontSize: '12px' }}>
+                        <strong style={{ color: '#166534' }}>✓ Real-time Verified Interaction Events</strong>
+                        <p style={{ marginTop: '8px', color: '#166534' }}>
+                          {verifiedConversions.length} verified conversions recorded in the past 7 days
+                        </p>
                       </div>
                     </div>
 
@@ -1105,8 +1206,8 @@ export default function Dashboard() {
                         <button 
                           className="quality-meta-button"
                           onClick={() => {
-                            setTimestampPeriod('past7');
-                            setShowTimestampModal(true);
+                            setConversionsPeriod(7);
+                            fetchVerifiedConversions(7);
                           }}
                           title="Past 7 Days"
                         >
@@ -1117,8 +1218,8 @@ export default function Dashboard() {
                         <button 
                           className="quality-meta-button"
                           onClick={() => {
-                            setTimestampPeriod('past30');
-                            setShowTimestampModal(true);
+                            setConversionsPeriod(30);
+                            fetchVerifiedConversions(30);
                           }}
                           title="Past 30 Days"
                         >
@@ -1126,47 +1227,11 @@ export default function Dashboard() {
                           <span>Past 30 Days</span>
                         </button>
                       </div>
-                      <div className="quality-controls">
-                        <button 
-                          className="quality-item-button"
-                          onClick={() => setShowConversionIdsModal(true)}
-                          title="Unique Conversion IDs"
-                        >
-                          <CheckCircle size={14} />
-                          <span>Unique Conversion IDs</span>
-                        </button>
-                        <span className="quality-separator">|</span>
-                        <button 
-                          className="quality-item-button"
-                          onClick={() => setShowDuplicatesModal(true)}
-                          title="Duplicates"
-                        >
-                          <Copy size={14} />
-                          <span>Duplicates</span>
-                        </button>
-                        <span className="quality-separator">|</span>
-                        <button 
-                          className="quality-item-button"
-                          onClick={() => setShowInvalidTrafficModal(true)}
-                          title="Invalid Traffic"
-                        >
-                          <AlertTriangle size={14} />
-                          <span>Invalid Traffic</span>
-                        </button>
-                        <span className="quality-separator">|</span>
-                        <button 
-                          className="quality-item-button"
-                          onClick={() => setShowArchiveModal(true)}
-                          title="View Archived Data"
-                        >
-                          <Archive size={14} />
-                        </button>
-                      </div>
                     </div>
 
                     <div className="detail-section audit-statement">
                       <h4>Audit Statement</h4>
-                      <p>All conversions shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
+                      <p>All conversions shown represent unique, consumer-initiated QR interactions verified by server-side validation. Each event includes complete data: timestamp, location, device type, and visitor status.</p>
                     </div>
                   </div>
 
