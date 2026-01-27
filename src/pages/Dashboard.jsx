@@ -1,6 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
+import scansApi from "../services/scansApi";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { Archive, Calendar, CheckCircle, Copy, AlertTriangle } from "lucide-react";
 
@@ -36,6 +37,11 @@ export default function Dashboard() {
   const [showConversionIdsModal, setShowConversionIdsModal] = useState(false);
   const [showDuplicatesModal, setShowDuplicatesModal] = useState(false);
   const [showInvalidTrafficModal, setShowInvalidTrafficModal] = useState(false);
+  const [showLogsModal, setShowLogsModal] = useState(false);
+  const [selectedLogRow, setSelectedLogRow] = useState(null);
+  const [scansData, setScansData] = useState([]);
+  const [scansLoading, setScansLoading] = useState(false);
+  const [scansError, setScansError] = useState(null);
 
   // Filter states (still used for analytics summary)
   const [filters, setFilters] = useState({
@@ -127,6 +133,39 @@ export default function Dashboard() {
     fetchSpotlightData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.from, filters.to, filters.deviceType, filters.conversionStatus, filters.ip, filters.qrId]);
+
+  // Fetch scans when timestamp modal opens
+  useEffect(() => {
+    if (showTimestampModal && timestampPeriod) {
+      fetchScansForPeriod();
+    }
+  }, [showTimestampModal, timestampPeriod]);
+
+  const fetchScansForPeriod = async () => {
+    try {
+      console.log('[Dashboard] Starting to fetch scans for period:', timestampPeriod);
+      setScansLoading(true);
+      setScansError(null);
+      
+      console.log('[Dashboard] Calling scansApi.getScansByPeriod...');
+      const data = await scansApi.getScansByPeriod(timestampPeriod, 50, 1);
+      
+      console.log('[Dashboard] Scans data received:', data);
+      console.log('[Dashboard] Number of scans:', data.scans?.length || 0);
+      
+      setScansData(data.scans || []);
+      console.log('[Dashboard] Scans state updated successfully');
+    } catch (error) {
+      console.error('[Dashboard] Error fetching scans:', error);
+      console.error('[Dashboard] Error message:', error.message);
+      console.error('[Dashboard] Error response:', error.response?.data);
+      setScansError('Failed to load scans data');
+      setScansData([]);
+    } finally {
+      setScansLoading(false);
+      console.log('[Dashboard] Loading state cleared');
+    }
+  };
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -2461,220 +2500,48 @@ export default function Dashboard() {
                       <th>Date</th>
                       <th>Time</th>
                       <th>QR Code Scanned</th>
+                      <th>Logs</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {timestampPeriod === 'past7' ? (
-                      <>
-                        <tr>
-                          <td>Jan 7, 2026</td>
-                          <td>14:32:15</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 7, 2026</td>
-                          <td>13:47:33</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 7, 2026</td>
-                          <td>12:58:47</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 6, 2026</td>
-                          <td>15:19:28</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 6, 2026</td>
-                          <td>14:56:03</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 6, 2026</td>
-                          <td>14:32:17</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 6, 2026</td>
-                          <td>13:45:22</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 5, 2026</td>
-                          <td>12:58:14</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 5, 2026</td>
-                          <td>11:23:44</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 5, 2026</td>
-                          <td>10:15:09</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 4, 2026</td>
-                          <td>16:47:33</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 4, 2026</td>
-                          <td>15:32:15</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 4, 2026</td>
-                          <td>14:28:42</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 3, 2026</td>
-                          <td>13:22:18</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 3, 2026</td>
-                          <td>12:34:21</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 2, 2026</td>
-                          <td>11:47:12</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 2, 2026</td>
-                          <td>10:23:44</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 1, 2026</td>
-                          <td>09:19:28</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 1, 2026</td>
-                          <td>08:56:03</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Jan 1, 2026</td>
-                          <td>07:32:17</td>
-                          <td>testqrcode</td>
-                        </tr>
-                      </>
+                    {scansLoading ? (
+                      <tr>
+                        <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
+                          <div style={{ color: '#6b7280' }}>Loading scans...</div>
+                        </td>
+                      </tr>
+                    ) : scansError ? (
+                      <tr>
+                        <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#dc2626' }}>
+                          {scansError}
+                        </td>
+                      </tr>
+                    ) : scansData.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>
+                          No scans found for this period
+                        </td>
+                      </tr>
                     ) : (
-                      <>
-                        <tr>
-                          <td>Jan 1, 2026</td>
-                          <td>09:19:28</td>
-                          <td>testqrcode</td>
+                      scansData.map((scan) => (
+                        <tr key={scan._id}>
+                          <td>{scan.date}</td>
+                          <td>{scan.time}</td>
+                          <td>{scan.qrId}</td>
+                          <td>
+                            <button 
+                              className="logs-btn"
+                              onClick={() => {
+                                setSelectedLogRow(scan);
+                                setShowLogsModal(true);
+                              }}
+                              title="View Logs"
+                            >
+                              📋
+                            </button>
+                          </td>
                         </tr>
-                        <tr>
-                          <td>Jan 1, 2026</td>
-                          <td>08:56:03</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 31, 2025</td>
-                          <td>17:32:15</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 31, 2025</td>
-                          <td>16:28:42</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 31, 2025</td>
-                          <td>15:22:18</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 30, 2025</td>
-                          <td>14:34:21</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 30, 2025</td>
-                          <td>13:47:12</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 30, 2025</td>
-                          <td>12:23:44</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 29, 2025</td>
-                          <td>11:19:28</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 29, 2025</td>
-                          <td>10:56:03</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 28, 2025</td>
-                          <td>09:32:17</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 28, 2025</td>
-                          <td>08:45:22</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 27, 2025</td>
-                          <td>16:58:14</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 27, 2025</td>
-                          <td>15:23:44</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 26, 2025</td>
-                          <td>14:19:28</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 26, 2025</td>
-                          <td>13:56:03</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 25, 2025</td>
-                          <td>12:32:17</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 25, 2025</td>
-                          <td>11:45:22</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 24, 2025</td>
-                          <td>10:58:14</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 24, 2025</td>
-                          <td>09:23:44</td>
-                          <td>testqrcode</td>
-                        </tr>
-                        <tr>
-                          <td>Dec 23, 2025</td>
-                          <td>08:19:28</td>
-                          <td>testqrcode</td>
-                        </tr>
-                      </>
+                      ))
                     )}
                   </tbody>
                 </table>
@@ -2685,6 +2552,107 @@ export default function Dashboard() {
               <button
                 className="btn secondary"
                 onClick={() => setShowTimestampModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logs Modal */}
+      {showLogsModal && selectedLogRow && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowLogsModal(false)}
+        >
+          <div
+            className="modal-content logs-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="modal-header">
+              <div>
+                <h2>Conversion Logs</h2>
+                <p>Details for {selectedLogRow.date} at {selectedLogRow.time}</p>
+              </div>
+              <button
+                className="close-btn"
+                onClick={() => setShowLogsModal(false)}
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="modal-body logs-body">
+              <div className="logs-details-grid">
+                <div className="logs-detail-item">
+                  <label>Timestamp</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.date} {selectedLogRow.time}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>City</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.city || 'Unknown'}
+                    {selectedLogRow.region && `, ${selectedLogRow.region}`}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>Campaign / Creative ID</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.creativeId || 'N/A'}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>Device</label>
+                  <div className="logs-detail-value">
+                    {scansApi.formatDeviceInfo(selectedLogRow.deviceInfo)}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>QR Code</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.qrId}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>Publisher</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.publisher || 'Direct'}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>Conversion Status</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.conversion ? (
+                      <span style={{ color: '#10b981' }}>✓ Converted</span>
+                    ) : (
+                      <span style={{ color: '#6b7280' }}>— No Conversion</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="logs-detail-item">
+                  <label>Browser</label>
+                  <div className="logs-detail-value">
+                    {selectedLogRow.deviceInfo?.browser || 'Unknown'}
+                    {selectedLogRow.deviceInfo?.browserVersion && ` ${selectedLogRow.deviceInfo.browserVersion}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn secondary"
+                onClick={() => setShowLogsModal(false)}
               >
                 Close
               </button>

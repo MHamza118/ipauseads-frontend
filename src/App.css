@@ -2187,3 +2187,172 @@
     font-size: 10px;
   }
 }
+
+
+/* Logs Button and Modal Styles */
+.logs-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0369a1;
+}
+
+.logs-btn:hover {
+  background: #f0f9ff;
+  transform: scale(1.1);
+}
+
+.logs-modal {
+  max-width: 500px;
+  width: 100%;
+}
+
+.logs-body {
+  padding: 24px;
+}
+
+.logs-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.logs-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logs-detail-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.logs-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 4px solid #0369a1;
+}
+
+@media (max-width: 768px) {
+  .logs-details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .logs-modal {
+    max-width: 95%;
+  }
+
+  .logs-body {
+    padding: 16px;
+  }
+
+  .logs-detail-value {
+    font-size: 13px;
+  }
+}
+
+/* Timestamp table styles */
+.timestamp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.timestamp-table th {
+  background: #f3f4f6;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+
+.timestamp-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.timestamp-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.timestamp-info {
+  background: #f0f9ff;
+  border-left: 4px solid #0369a1;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+.timestamp-description {
+  margin: 0;
+  font-size: 13px;
+  color: #0c4a6e;
+  font-weight: 600;
+}
+
+.timestamp-table-section {
+  margin-top: 24px;
+}
+
+.timestamp-table-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 768px) {
+  .timestamp-table {
+    font-size: 12px;
+  }
+
+  .timestamp-table th,
+  .timestamp-table td {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  .timestamp-info {
+    padding: 12px;
+  }
+
+  .timestamp-description {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timestamp-table th,
+  .timestamp-table td {
+    padding: 8px 4px;
+    font-size: 10px;
+  }
+
+  .timestamp-table-section h3 {
+    font-size: 12px;
+  }
+}
