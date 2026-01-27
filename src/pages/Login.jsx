@@ -1,78 +1,23 @@
 // src/pages/Login.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [categoryId, setCategoryId] = useState(null);
-  const [scanRecording, setScanRecording] = useState(false);
-  const [scanError, setScanError] = useState(null);
-
-  // Extract categoryId from URL and record scan on component mount
-  useEffect(() => {
-    const urlCategoryId = searchParams.get("categoryId");
-    if (urlCategoryId) {
-      setCategoryId(urlCategoryId);
-      recordScan(urlCategoryId);
-    }
-  }, [searchParams]);
-
-  // Record scan event when user visits login page with categoryId
-  const recordScan = async (catId) => {
-    try {
-      setScanRecording(true);
-      setScanError(null);
-      
-      const response = await api.post("/scans/record", {
-        categoryId: catId
-      });
-
-      if (response.data.ok) {
-        // Store scanId and sessionId in sessionStorage for later use
-        sessionStorage.setItem("scanId", response.data.scanId);
-        sessionStorage.setItem("sessionId", response.data.sessionId);
-        sessionStorage.setItem("categoryId", catId);
-        console.log("Scan recorded successfully:", response.data.scanId);
-      }
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || "Failed to record scan";
-      setScanError(errorMsg);
-      console.error("Scan recording error:", errorMsg);
-      // Don't block login if scan recording fails
-    } finally {
-      setScanRecording(false);
-    }
-  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setErr(""); 
-    setLoading(true);
+    setErr(""); setLoading(true);
     try {
       const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      
-      // Mark conversion if categoryId exists
-      if (categoryId) {
-        try {
-          await api.post("/scans/mark-conversion", {
-            categoryId: categoryId
-          });
-          console.log("Conversion marked successfully");
-        } catch (convError) {
-          console.error("Conversion marking error:", convError);
-          // Don't block login if conversion marking fails
-        }
-      }
-      
       navigate("/dashboard");
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Login failed";
@@ -101,8 +46,6 @@ export default function Login() {
         <p className="muted">Sign in to view iPauseAds dashboard</p>
 
         {err && <div className="alert">{err}</div>}
-        {scanError && <div className="alert alert-warning">Scan tracking: {scanError}</div>}
-        {scanRecording && <div className="alert alert-info">Recording scan...</div>}
 
         <form onSubmit={submit} className="auth-form">
           <label>Email</label>
@@ -135,7 +78,7 @@ export default function Login() {
               )}
             </button>
           </div>
-          <button className="btn primary" disabled={loading || scanRecording}>{loading ? "Signing in..." : "Sign In"}</button>
+          <button className="btn primary" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
         </form>
 
         <div className="auth-footer">
