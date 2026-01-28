@@ -2523,10 +2523,12 @@ export default function Dashboard() {
                         </td>
                       </tr>
                     ) : (
-                      scansData.map((scan) => (
+                      scansData.map((scan) => {
+                        const formatted = scansApi.formatTimestamp(scan.timestamp);
+                        return (
                         <tr key={scan._id}>
-                          <td>{scan.date}</td>
-                          <td>{scan.time}</td>
+                          <td>{formatted.date}</td>
+                          <td>{formatted.time}</td>
                           <td>{scan.qrId}</td>
                           <td>
                             <button 
@@ -2541,7 +2543,8 @@ export default function Dashboard() {
                             </button>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -2561,7 +2564,9 @@ export default function Dashboard() {
       )}
 
       {/* Logs Modal */}
-      {showLogsModal && selectedLogRow && (
+      {showLogsModal && selectedLogRow && (() => {
+        const formatted = scansApi.formatTimestamp(selectedLogRow.timestamp);
+        return (
         <div
           className="modal-overlay"
           onClick={() => setShowLogsModal(false)}
@@ -2573,7 +2578,7 @@ export default function Dashboard() {
             <header className="modal-header">
               <div>
                 <h2>Conversion Logs</h2>
-                <p>Details for {selectedLogRow.date} at {selectedLogRow.time}</p>
+                <p>Details for {formatted.date} at {formatted.time}</p>
               </div>
               <button
                 className="close-btn"
@@ -2588,7 +2593,7 @@ export default function Dashboard() {
                 <div className="logs-detail-item">
                   <label>Timestamp</label>
                   <div className="logs-detail-value">
-                    {selectedLogRow.date} {selectedLogRow.time}
+                    {formatted.fullDateTime}
                   </div>
                 </div>
 
@@ -2662,7 +2667,8 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

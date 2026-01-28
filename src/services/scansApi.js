@@ -130,32 +130,38 @@ export const formatLocation = (geo) => {
 };
 
 /**
- * Format timestamp for display
+ * Format timestamp for display in user's local timezone
  */
 export const formatTimestamp = (timestamp) => {
   const date = new Date(timestamp);
   
+  // Format in user's local timezone
+  const dateStr = date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+  
+  const timeStr = date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit',
+    hour12: false
+  });
+  
+  const fullDateTime = `${dateStr} ${timeStr}`;
+  
+  console.log('[ScansAPI] Formatted timestamp:', {
+    raw: timestamp,
+    date: dateStr,
+    time: timeStr,
+    fullDateTime: fullDateTime
+  });
+  
   return {
-    date: date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    }),
-    time: date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: false
-    }),
-    fullDateTime: date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    })
+    date: dateStr,
+    time: timeStr,
+    fullDateTime: fullDateTime
   };
 };
 
