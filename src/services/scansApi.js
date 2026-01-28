@@ -108,12 +108,24 @@ export const formatLocation = (geo) => {
   
   const parts = [];
   
-  if (geo.city) parts.push(geo.city);
-  if (geo.region) parts.push(geo.region);
-  if (geo.country) parts.push(geo.country);
+  // Build location string with available data
+  if (geo.city) {
+    parts.push(geo.city);
+  }
+  if (geo.region && geo.region !== geo.city) {
+    parts.push(geo.region);
+  }
+  if (geo.country) {
+    parts.push(geo.country);
+  }
   
   const formatted = parts.filter(Boolean).join(', ') || 'Unknown Location';
-  console.log('[ScansAPI] Formatted location:', formatted);
+  
+  console.log('[ScansAPI] Formatted location:', {
+    raw: geo,
+    formatted: formatted
+  });
+  
   return formatted;
 };
 

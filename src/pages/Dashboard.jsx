@@ -2595,8 +2595,11 @@ export default function Dashboard() {
                 <div className="logs-detail-item">
                   <label>City</label>
                   <div className="logs-detail-value">
-                    {selectedLogRow.city || 'Unknown'}
-                    {selectedLogRow.region && `, ${selectedLogRow.region}`}
+                    {scansApi.formatLocation(selectedLogRow.deviceInfo?.geo || {
+                      city: selectedLogRow.city,
+                      region: selectedLogRow.region,
+                      country: selectedLogRow.country
+                    })}
                   </div>
                 </div>
 
