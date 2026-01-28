@@ -170,7 +170,7 @@ export default function PublisherOnboarding() {
     doc.setFont('helvetica', 'normal');
     addText('Production URL:', 11, 'bold');
     doc.setFont('courier', 'normal');
-    addText('https://api.ipauseads.com/v1/events', 10);
+    addText('http://localhost:4000/v1/events', 10);
 
     // Authentication
     addSection('AUTHENTICATION');
@@ -639,10 +639,10 @@ export default function PublisherOnboarding() {
               <div className="credential-item">
                 <label>Production:</label>
                 <div className="credential-value">
-                  <code>https://api.ipauseads.com/v1/events</code>
+                  <code>http://localhost:4000/v1/events</code>
                   <button 
                     className="btn-copy"
-                    onClick={() => copyToClipboard('https://api.ipauseads.com/v1/events', 'Production URL')}
+                    onClick={() => copyToClipboard('http://localhost:4000/v1/events', 'Production URL')}
                   >
                     📋 Copy
                   </button>
