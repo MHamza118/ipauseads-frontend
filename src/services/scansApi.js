@@ -6,8 +6,6 @@ import api from './api';
  */
 export const getScansByPeriod = async (period = 'past7', limit = 50, page = 1) => {
   try {
-    console.log('[ScansAPI] Fetching scans for period:', period, 'limit:', limit, 'page:', page);
-    
     const response = await api.get('/analytics/scans/by-period', {
       params: {
         period,
@@ -16,19 +14,8 @@ export const getScansByPeriod = async (period = 'past7', limit = 50, page = 1) =
       }
     });
     
-    console.log('[ScansAPI] Success! Received', response.data.scans?.length || 0, 'scans');
-    console.log('[ScansAPI] Response data:', response.data);
-    
     return response.data;
   } catch (error) {
-    console.error('[ScansAPI] Error fetching scans by period:', error);
-    console.error('[ScansAPI] Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      data: error.response?.data
-    });
     throw error;
   }
 };
@@ -38,23 +25,10 @@ export const getScansByPeriod = async (period = 'past7', limit = 50, page = 1) =
  */
 export const getScanDetails = async (scanId) => {
   try {
-    console.log('[ScansAPI] Fetching scan details for ID:', scanId);
-    
     const response = await api.get(`/analytics/scans/${scanId}`);
-    
-    console.log('[ScansAPI] Success! Received scan details');
-    console.log('[ScansAPI] Scan data:', response.data);
     
     return response.data;
   } catch (error) {
-    console.error('[ScansAPI] Error fetching scan details:', error);
-    console.error('[ScansAPI] Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      data: error.response?.data
-    });
     throw error;
   }
 };
@@ -64,7 +38,6 @@ export const getScanDetails = async (scanId) => {
  */
 export const formatDeviceInfo = (deviceInfo) => {
   if (!deviceInfo) {
-    console.warn('[ScansAPI] No device info provided');
     return 'Unknown Device';
   }
   
@@ -93,7 +66,6 @@ export const formatDeviceInfo = (deviceInfo) => {
   }
   
   const formatted = parts.join(' / ');
-  console.log('[ScansAPI] Formatted device:', formatted);
   return formatted;
 };
 
@@ -102,16 +74,12 @@ export const formatDeviceInfo = (deviceInfo) => {
  */
 export const formatLocation = (geo) => {
   if (!geo) {
-    console.warn('[ScansAPI] No geo info provided');
     return 'Unknown Location';
   }
   
   const parts = [];
   
-  // Build location string with available data
-  if (geo.city) {
-    parts.push(geo.city);
-  }
+  if (geo.city) parts.push(geo.city);
   if (geo.region && geo.region !== geo.city) {
     parts.push(geo.region);
   }
@@ -120,11 +88,6 @@ export const formatLocation = (geo) => {
   }
   
   const formatted = parts.filter(Boolean).join(', ') || 'Unknown Location';
-  
-  console.log('[ScansAPI] Formatted location:', {
-    raw: geo,
-    formatted: formatted
-  });
   
   return formatted;
 };
@@ -150,13 +113,6 @@ export const formatTimestamp = (timestamp) => {
   });
   
   const fullDateTime = `${dateStr} ${timeStr}`;
-  
-  console.log('[ScansAPI] Formatted timestamp:', {
-    raw: timestamp,
-    date: dateStr,
-    time: timeStr,
-    fullDateTime: fullDateTime
-  });
   
   return {
     date: dateStr,

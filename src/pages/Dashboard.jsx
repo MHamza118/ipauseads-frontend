@@ -143,27 +143,17 @@ export default function Dashboard() {
 
   const fetchScansForPeriod = async () => {
     try {
-      console.log('[Dashboard] Starting to fetch scans for period:', timestampPeriod);
       setScansLoading(true);
       setScansError(null);
       
-      console.log('[Dashboard] Calling scansApi.getScansByPeriod...');
       const data = await scansApi.getScansByPeriod(timestampPeriod, 50, 1);
       
-      console.log('[Dashboard] Scans data received:', data);
-      console.log('[Dashboard] Number of scans:', data.scans?.length || 0);
-      
       setScansData(data.scans || []);
-      console.log('[Dashboard] Scans state updated successfully');
     } catch (error) {
-      console.error('[Dashboard] Error fetching scans:', error);
-      console.error('[Dashboard] Error message:', error.message);
-      console.error('[Dashboard] Error response:', error.response?.data);
       setScansError('Failed to load scans data');
       setScansData([]);
     } finally {
       setScansLoading(false);
-      console.log('[Dashboard] Loading state cleared');
     }
   };
 
