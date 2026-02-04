@@ -134,6 +134,7 @@ export default function Dashboard() {
     try {
       setAttentionLoading(true);
       const res = await api.get('/a2ar/summary?days=7');
+      console.log('Attention metrics response:', res.data);
       setAttentionMetrics(res.data);
     } catch (error) {
       console.error("Error fetching attention metrics:", error);
