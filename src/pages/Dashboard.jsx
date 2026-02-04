@@ -312,7 +312,7 @@ export default function Dashboard() {
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">Conversion Status</label>
+          <label className="filter-label">Engagements Status</label>
           <select
             className="filter-input"
             value={filters.conversionStatus}
@@ -488,7 +488,7 @@ export default function Dashboard() {
                         className="header-button"
                         onClick={() => setShowVerifiedConversionsModal(true)}
                       >
-                        Verified Conversions
+                        VERIFIED QR ENGAGEMENTS
                       </button>
                     </th>
                     <th>
@@ -676,7 +676,7 @@ export default function Dashboard() {
                           <span className="client-value">{selectedIpMetrics.metrics.a2ar.pauseOpportunities || 0}</span>
                         </div>
                         <div className="client-input-row">
-                          <span className="client-label">Verified QR Conversions</span>
+                          <span className="client-label">Verified QR Engangements</span>
                           <span className="client-value">{selectedIpMetrics.metrics.a2ar.qrDownloads || 0}</span>
                         </div>
                         <div className="client-result-row">
@@ -1045,7 +1045,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Verified Conversions</h2>
+                <h2>VERIFIED QR ENGAGEMENTS</h2>
               </div>
               <button
                 className="close-btn"
@@ -1077,11 +1077,6 @@ export default function Dashboard() {
                       <span className="stat-label">Last 7 Days</span>
                       <span className="stat-number">1,482</span>
                     </div>
-                    <div className="stat-divider">|</div>
-                    <div className="stat-item">
-                      <span className="stat-label">Conversion Rate</span>
-                      <span className="stat-number">7.37%</span>
-                    </div>
                   </div>
 
                   {/* Details Button */}
@@ -1098,7 +1093,7 @@ export default function Dashboard() {
                   <div className="conversions-details">
                     <div className="detail-section">
                       <p><strong>Date Range:</strong> Jan 1–5, 2026</p>
-                      <p><strong>Verified Conversions:</strong> 500</p>
+                      <p><strong>Verified QR Engagements:</strong> 500</p>
                       <p><strong>Status:</strong> Verified • Billable • Settled</p>
                     </div>
 
@@ -1159,10 +1154,10 @@ export default function Dashboard() {
                         <button 
                           className="quality-item-button"
                           onClick={() => setShowConversionIdsModal(true)}
-                          title="Unique Conversion IDs"
+                          title="Unique Engagements IDs"
                         >
                           <CheckCircle size={14} />
-                          <span>Unique Conversion IDs</span>
+                          <span>Unique Engagements IDs</span>
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
@@ -1195,7 +1190,7 @@ export default function Dashboard() {
 
                     <div className="detail-section audit-statement">
                       <h4>Audit Statement</h4>
-                      <p>All conversions shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
+                      <p>All engagements shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
                     </div>
                   </div>
 
@@ -1262,7 +1257,7 @@ export default function Dashboard() {
                       <div className="wallet-status">Available</div>
                     </div>
                     <div className="wallet-card">
-                      <div className="wallet-label">Verified Conversions</div>
+                      <div className="wallet-label">Verified QR Engagements</div>
                       <div className="wallet-amount">2,614</div>
                       <div className="wallet-status">total</div>
                     </div>
@@ -1291,8 +1286,8 @@ export default function Dashboard() {
                         <thead>
                           <tr>
                             <th>Publisher</th>
-                            <th>Verified Conversions</th>
-                            <th>Avg Conversion Fee</th>
+                            <th>Verified QR Engagements</th>
+                            <th>Avg Engagements Fee</th>
                             <th>Total Spend</th>
                             <th></th>
                           </tr>
@@ -1336,7 +1331,7 @@ export default function Dashboard() {
                                         <span className="detail-value">Show / Genre</span>
                                       </div>
                                       <div className="detail-item">
-                                        <span className="detail-label">Conversion Status:</span>
+                                        <span className="detail-label">Engagements Status:</span>
                                         <span className="detail-value">Verified</span>
                                       </div>
                                     </div>
@@ -1452,14 +1447,14 @@ export default function Dashboard() {
                     </div>
 
                     <div className="detail-section">
-                      <h4>Attention-to-Action Rate (A2AR) = Verified QR Conversions ÷ Valid Pause Opportunities</h4>
+                      <h4>Attention-to-Action Rate (A2AR) = Verified QR Engagements ÷ Valid Pause Opportunities</h4>
                       <div className="metric-calculation-box">
                         <div className="calc-row">
                           <span className="calc-label">Valid Pause Opportunities</span>
                           <span className="calc-value">_______</span>
                         </div>
                         <div className="calc-row">
-                          <span className="calc-label">Verified QR Conversions</span>
+                          <span className="calc-label">Verified QR Engagements</span>
                           <span className="calc-value">_______</span>
                         </div>
                         <div className="calc-row calc-result">
@@ -1931,7 +1926,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Unique Conversion IDs</h2>
+                <h2>Unique Engagements IDs</h2>
               </div>
               <button
                 className="close-btn"
@@ -1944,7 +1939,7 @@ export default function Dashboard() {
             <div className="modal-body">
               <div className="conversion-ids-info">
                 <p>
-                  <strong>Total Unique Conversion IDs: 500</strong>
+                  <strong>Total Unique Engagements IDs: 500</strong>
                 </p>
                 <p className="conversion-ids-description">
                   Date Range: Jan 1–5, 2026
@@ -2280,7 +2275,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Unique Conversion IDs</h2>
+                <h2>Unique Engagements IDs</h2>
               </div>
               <button
                 className="close-btn"
@@ -2293,7 +2288,7 @@ export default function Dashboard() {
             <div className="modal-body">
               <div className="conversion-ids-info">
                 <p>
-                  <strong>Total Unique Conversion IDs: 500</strong>
+                  <strong>Total Unique Engagements IDs: 500</strong>
                 </p>
                 <p className="conversion-ids-description">
                   Date Range: Jan 1–5, 2026
@@ -2627,7 +2622,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="logs-detail-item">
-                  <label>Conversion Status</label>
+                  <label>Engagements Status</label>
                   <div className="logs-detail-value">
                     {selectedLogRow.conversion ? (
                       <span style={{ color: '#10b981' }}>✓ Converted</span>
