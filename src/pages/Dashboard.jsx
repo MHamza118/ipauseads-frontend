@@ -32,6 +32,8 @@ export default function Dashboard() {
   const [expandedPublisher, setExpandedPublisher] = useState(null);
   const [showAttentionSpotlightModal, setShowAttentionSpotlightModal] = useState(false);
   const [showAttentionDetails, setShowAttentionDetails] = useState(false);
+  const [attentionMetrics, setAttentionMetrics] = useState(null);
+  const [attentionLoading, setAttentionLoading] = useState(false);
   const [showTimestampModal, setShowTimestampModal] = useState(false);
   const [timestampPeriod, setTimestampPeriod] = useState(null); // 'past7' or 'past30'
   const [showConversionIdsModal, setShowConversionIdsModal] = useState(false);
@@ -128,6 +130,19 @@ export default function Dashboard() {
     }
   };
 
+  const fetchAttentionMetrics = async () => {
+    try {
+      setAttentionLoading(true);
+      const res = await api.get('/a2ar/summary?days=7');
+      setAttentionMetrics(res.data);
+    } catch (error) {
+      console.error("Error fetching attention metrics:", error);
+      setAttentionMetrics(null);
+    } finally {
+      setAttentionLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSummary();
     fetchSpotlightData();
@@ -140,6 +155,13 @@ export default function Dashboard() {
       fetchScansForPeriod();
     }
   }, [showTimestampModal, timestampPeriod]);
+
+  // Fetch attention metrics when modal opens
+  useEffect(() => {
+    if (showAttentionSpotlightModal) {
+      fetchAttentionMetrics();
+    }
+  }, [showAttentionSpotlightModal]);
 
   const fetchScansForPeriod = async () => {
     try {
@@ -1411,20 +1433,31 @@ export default function Dashboard() {
               {!showAttentionDetails ? (
                 <>
                   {/* Compact View */}
-                  <div className="attention-metrics-compact">
-                    <div className="attention-metric-row">
-                      <span className="metric-name">Attention-to-Action Rate (A2AR)</span>
-                      <span className="metric-result">Exceptional</span>
+                  {attentionLoading ? (
+                    <div style={{ textAlign: "center", padding: 40 }}>
+                      <div className="spinner"></div>
+                      <div style={{ marginTop: 12, color: "#6b7280" }}>Loading metrics...</div>
                     </div>
-                    <div className="attention-metric-row">
-                      <span className="metric-name">Attention Scan Velocity (ASV)</span>
-                      <span className="metric-result">Strong</span>
+                  ) : attentionMetrics ? (
+                    <div className="attention-metrics-compact">
+                      <div className="attention-metric-row">
+                        <span className="metric-name">Attention-to-Action Rate (A2AR)</span>
+                        <span className="metric-result">{attentionMetrics.a2ar?.label || 'N/A'}</span>
+                      </div>
+                      <div className="attention-metric-row">
+                        <span className="metric-name">Attention Scan Velocity (ASV)</span>
+                        <span className="metric-result">{attentionMetrics.asv?.label || 'N/A'}</span>
+                      </div>
+                      <div className="attention-metric-row">
+                        <span className="metric-name">Attention Composite Index (ACI)</span>
+                        <span className="metric-result">{attentionMetrics.aci?.label || 'N/A'}</span>
+                      </div>
                     </div>
-                    <div className="attention-metric-row">
-                      <span className="metric-name">Attention Composite Index (ACI)</span>
-                      <span className="metric-result">Exceptional</span>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
+                      No attention metrics available yet.
                     </div>
-                  </div>
+                  )}
 
                   {/* Details Button */}
                   <button
@@ -1451,15 +1484,15 @@ export default function Dashboard() {
                       <div className="metric-calculation-box">
                         <div className="calc-row">
                           <span className="calc-label">Valid Pause Opportunities</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-value">{attentionMetrics?.a2ar?.pauseOpportunities || 0}</span>
                         </div>
                         <div className="calc-row">
                           <span className="calc-label">Verified QR Engagements</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-value">{attentionMetrics?.a2ar?.qrDownloads || 0}</span>
                         </div>
                         <div className="calc-row calc-result">
                           <span className="calc-label">A2AR</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-value">{attentionMetrics?.a2ar?.percentage?.toFixed(2) || 0}%</span>
                         </div>
                       </div>
                       <table className="tier-reference-table">
@@ -1504,16 +1537,16 @@ export default function Dashboard() {
                       <h4>Attention Scan Velocity (ASV) = The Time QR Appeared and Time To Download</h4>
                       <div className="metric-calculation-box">
                         <div className="calc-row">
-                          <span className="calc-label">QR Appearance</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">Average Scan Time</span>
+                          <span className="calc-value">{attentionMetrics?.asv?.averageSeconds?.toFixed(2) || 0}s</span>
                         </div>
                         <div className="calc-row">
-                          <span className="calc-label">Download Range</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">Tier</span>
+                          <span className="calc-value">{attentionMetrics?.asv?.label || 'N/A'}</span>
                         </div>
                         <div className="calc-row calc-result">
-                          <span className="calc-label">ASV</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">ASV Status</span>
+                          <span className="calc-value">{attentionMetrics?.asv?.label || 'N/A'}</span>
                         </div>
                         <div className="calc-row" style={{ borderBottom: 'none', paddingTop: '8px' }}>
                           <span className="calc-label"></span>
@@ -1562,16 +1595,16 @@ export default function Dashboard() {
                       <h4>Attention Composite Index (ACI) = Attention-to-Action Rate + Attention Scan Velocity</h4>
                       <div className="metric-calculation-box">
                         <div className="calc-row">
-                          <span className="calc-label">A2AR</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">A2AR Tier</span>
+                          <span className="calc-value">{attentionMetrics?.a2ar?.tier || 0}</span>
                         </div>
                         <div className="calc-row">
-                          <span className="calc-label">ASV</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">ASV Tier</span>
+                          <span className="calc-value">{attentionMetrics?.asv?.tier || 0}</span>
                         </div>
                         <div className="calc-row calc-result">
-                          <span className="calc-label">ACI</span>
-                          <span className="calc-value">_______</span>
+                          <span className="calc-label">ACI Score</span>
+                          <span className="calc-value">{attentionMetrics?.aci?.score?.toFixed(2) || 0}</span>
                         </div>
                         <div className="calc-row" style={{ borderBottom: 'none', paddingTop: '8px' }}>
                           <span className="calc-label"></span>
