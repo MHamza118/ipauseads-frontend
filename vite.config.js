@@ -8,20 +8,20 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'https://api.ipauseads.com',
+        target: 'http://localhost:4000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/auth': {
-        target: 'https://api.ipauseads.com',
+        target: 'http://localhost:4000',
         changeOrigin: true
       },
       '/analytics': {
-        target: 'https://api.ipauseads.com',
+        target: 'http://localhost:4000',
         changeOrigin: true
       },
       '/qr': {
-        target: 'https://api.ipauseads.com',
+        target: 'http://localhost:4000',
         changeOrigin: true
       }
     }

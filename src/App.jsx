@@ -10,6 +10,7 @@ import BillingCenter from "./pages/BillingCenter";
 import WalletActivity from "./pages/WalletActivity";
 import SpotlightDashboard from "./pages/SpotlightDashboard";
 import PublisherOnboarding from "./pages/PublisherOnboarding";
+import QRLanding from "./pages/QRLanding";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -21,6 +22,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* QR Landing Page - Public, no auth required */}
+        <Route path="/qr/:qrId" element={<QRLanding />} />
 
         <Route path="/dashboard" element={
           <ProtectedRoute>
