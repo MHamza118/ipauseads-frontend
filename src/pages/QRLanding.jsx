@@ -1,19 +1,25 @@
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 export default function QRLanding() {
   const { qrId } = useParams();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Redirect immediately without waiting for fetch
     const redirect = async () => {
       try {
-        const response = await fetch(`/api/qr/details/${qrId}`, { 
-          signal: AbortSignal.timeout(1000) // 1 second timeout max
-        });
+        // Fetch QR details
+        const response = await fetch(`/api/qr/details/${qrId}`);
         if (response.ok) {
           const data = await response.json();
-          window.location.replace(data.destinationUrl);
+          
+          // Add tracking params to destination URL
+          const destUrl = new URL(data.destinationUrl);
+          destUrl.searchParams.append('ipause_scan', qrId);
+          destUrl.searchParams.append('sessionId', searchParams.get('sessionId') || '');
+          
+          // Redirect immediately (no delay)
+          window.location.replace(destUrl.toString());
         } else {
           window.location.replace('https://ipauseads.com');
         }
@@ -23,7 +29,7 @@ export default function QRLanding() {
     };
 
     redirect();
-  }, [qrId]);
+  }, [qrId, searchParams]);
 
   return null;
 }
