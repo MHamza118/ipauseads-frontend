@@ -29,15 +29,28 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+    
+    <!-- iPauseAds QR Tracking Script -->
+    <script>
+      (function() {
+        const params = new URLSearchParams(window.location.search);
+        const qrId = params.get('ipause_qr');
+        const sessionId = params.get('sessionId');
+        const publisher = params.get('publisher');
+        
+        if (qrId) {
+          // Send tracking data to ipauseads backend
+          fetch('https://api.ipauseads.com/api/qr/track-external', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              qrId,
+              sessionId,
+              publisher
+            })
+          }).catch(e => console.log('QR tracking sent'));
+        }
+      })();
+    </script>
   </body>
 </html>
