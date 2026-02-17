@@ -13,6 +13,12 @@ export default function QRLanding() {
         
         const data = await response.json();
         
+        // Add meta refresh tag to show destination in preview
+        const meta = document.createElement('meta');
+        meta.httpEquiv = 'refresh';
+        meta.content = `0;url=${data.destinationUrl}`;
+        document.head.appendChild(meta);
+        
         // Redirect immediately to destination (0ms delay)
         window.location.replace(data.destinationUrl);
       } catch (err) {
