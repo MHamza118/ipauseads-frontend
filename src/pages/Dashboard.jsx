@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import scansApi from "../services/scansApi";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { Archive, Calendar, CheckCircle, Copy, AlertTriangle } from "lucide-react";
+import { Archive, Calendar, CheckCircle, Copy, AlertTriangle, PlayCircle, Tv2, Youtube, Feather, Monitor, Music } from "lucide-react";
 
 export default function Dashboard() {
   const [summary, setSummary] = useState({
@@ -24,6 +23,8 @@ export default function Dashboard() {
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [showPauseOpportunitiesModal, setShowPauseOpportunitiesModal] = useState(false);
   const [showPauseDetails, setShowPauseDetails] = useState(false);
+  const [pauseDateFrom, setPauseDateFrom] = useState('02/20/2026');
+  const [pauseDateTo, setPauseDateTo] = useState('02/26/2026');
   const [showVerifiedConversionsModal, setShowVerifiedConversionsModal] = useState(false);
   const [showConversionsDetails, setShowConversionsDetails] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -44,6 +45,16 @@ export default function Dashboard() {
   const [scansData, setScansData] = useState([]);
   const [scansLoading, setScansLoading] = useState(false);
   const [scansError, setScansError] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+
+  // Update date in real-time
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Filter states (still used for analytics summary)
   const [filters, setFilters] = useState({
@@ -380,268 +391,116 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="main">
-        <header className="dashboard-header">
-          <div>
-            <h1>📺 Spotlight - Performance by Program</h1>
-            <p className="subtitle">
-              View conversions aggregated by TV shows and content
-            </p>
+        {/* Professional Header */}
+        <div className="professional-header">
+          <div className="header-content">
+            <h1 className="header-title">iPause Performance Ledger</h1>
+            <div className="header-date">
+              <span id="todays-date">
+                {currentDate}
+              </span>
+            </div>
           </div>
-          <button onClick={fetchSpotlightData} className="btn secondary">
+          <button onClick={() => window.location.reload()} className="refresh-btn">
             ↻ Refresh
           </button>
-        </header>
-
-        {/* KPI Cards */}
-        <div className="kpi-cards">
-          <div className="kpi-card">
-            <div className="kpi-icon" style={{ background: "#14b8a6" }}>
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div className="kpi-content">
-              <div className="kpi-label">Total Register</div>
-              <div className="kpi-value">
-                {(summary.registered ?? 0).toLocaleString()}
-              </div>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon" style={{ background: "#06b6d4" }}>
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="kpi-content">
-              <div className="kpi-label">Total Conversions</div>
-              <div className="kpi-value">
-                {(summary.conversions ?? 0).toLocaleString()}
-              </div>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon" style={{ background: "#8b5cf6" }}>
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <div className="kpi-content">
-              <div className="kpi-label">Conversion Rate</div>
-              <div className="kpi-value">{summary.conversionRate}%</div>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon" style={{ background: "#ec4899" }}>
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-            </div>
-            <div className="kpi-content">
-              <div className="kpi-label">Unique IPs</div>
-              <div className="kpi-value">
-                {(summary.uniqueIps ?? 0).toLocaleString()}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Spotlight - aggregated by program */}
-        <div className="spotlight-section">
-          <div className="table-header">
-            <div>
-              <strong>Content Performance</strong>
+        {/* Main Performance Ledger Grid */}
+        <div className="performance-ledger">
+          {/* Pause Opportunities Card */}
+          <div 
+            className="ledger-card pause-opportunities-card"
+            onClick={() => setShowPauseOpportunitiesModal(true)}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setShowPauseOpportunitiesModal(true);
+              }
+            }}
+          >
+            <div className="card-header">
+              <h3 className="card-label">PAUSE OPPORTUNITIES</h3>
             </div>
-            <button className="btn" onClick={fetchSpotlightData}>
-              ↻ Refresh
-            </button>
-          </div>
-
-          <div className="table-wrap">
-            {loading ? (
-              <div style={{ textAlign: "center", padding: 40 }}>
-                <div className="spinner"></div>
-                <div style={{ marginTop: 12, color: "#6b7280" }}>Loading...</div>
-              </div>
-            ) : (
-              <table className="spotlight-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <button 
-                        className="header-button"
-                        onClick={() => setShowPauseOpportunitiesModal(true)}
-                      >
-                        Pause Opportunities
-                      </button>
-                    </th>
-                    <th>
-                      <button 
-                        className="header-button"
-                        onClick={() => setShowVerifiedConversionsModal(true)}
-                      >
-                        VERIFIED QR ENGAGEMENTS
-                      </button>
-                    </th>
-                    <th>
-                      <button 
-                        className="header-button"
-                        onClick={() => setShowAttentionSpotlightModal(true)}
-                      >
-                        Attention Spotlight
-                      </button>
-                    </th>
-                    <th>
-                      <button 
-                        className="header-button"
-                        onClick={() => setShowWalletModal(true)}
-                      >
-                        Wallet (Verified Spend)
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {spotlightData.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
-                        <p>No program data available yet.</p>
-                        <p style={{ fontSize: "14px", color: "#666" }}>
-                          Scans will be grouped by TV show/content here.
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    spotlightData.map((program, index) => (
-                      <tr key={index}>
-                        <td>
-                          <div className="program-thumbnail">
-                            {program.thumbnail_url ? (
-                              <img
-                                src={program.thumbnail_url}
-                                alt={program.series_title}
-                              />
-                            ) : (
-                              <div className="placeholder-thumb">📺</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="conversion-count">
-                          {program.verified_conversions}
-                        </td>
-                        <td>
-                          <strong>{program.series_title}</strong>
-                          <div className="program-meta">
-                            <span className="publisher-badge">{program.publisher}</span>
-                            <span className="qr-badge">{program.qr_id}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <button
-                            className="btn-view-log"
-                            onClick={() => handleViewLog(program)}
-                          >
-                            📋 View Log
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-
-        {/* Charts */}
-        <div className="charts">
-          <div className="chart card">
-            <div className="card-title">Visits (last 7 days)</div>
-            <div style={{ height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={visits}>
-                  <XAxis dataKey="date" style={{ fontSize: 12 }} />
-                  <YAxis style={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 8
-                    }}
-                    labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                  />
-                  <Line
-                    dataKey="count"
-                    stroke="#14b8a6"
-                    strokeWidth={3}
-                    dot={{ fill: "#14b8a6", r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="card-content">
+              <div className="card-icon">📺</div>
+              <p className="card-description">Video completion and ad visibility metrics</p>
+            </div>
+            <div className="card-footer">
+              <span className="view-details">View Details →</span>
             </div>
           </div>
 
-          <div className="chart card">
-            <div className="card-title">Device Breakdown</div>
-            <div style={{ height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={deviceData}>
-                  <XAxis dataKey="name" style={{ fontSize: 12 }} />
-                  <YAxis style={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 8
-                    }}
-                    labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                    formatter={(value, name, props) => [
-                      `${value} (${props.payload.percentage}%)`,
-                      "Count"
-                    ]}
-                  />
-                  <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                    {deviceData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Verified QR Engagements Card */}
+          <div 
+            className="ledger-card verified-engagements-card"
+            onClick={() => setShowVerifiedConversionsModal(true)}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setShowVerifiedConversionsModal(true);
+              }
+            }}
+          >
+            <div className="card-header">
+              <h3 className="card-label">VERIFIED QR ENGAGEMENTS</h3>
+            </div>
+            <div className="card-content">
+              <div className="card-icon">✓</div>
+              <p className="card-description">Confirmed consumer interactions and conversions</p>
+            </div>
+            <div className="card-footer">
+              <span className="view-details">View Details →</span>
+            </div>
+          </div>
+
+          {/* Attention Spotlight Card */}
+          <div 
+            className="ledger-card attention-spotlight-card"
+            onClick={() => setShowAttentionSpotlightModal(true)}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setShowAttentionSpotlightModal(true);
+              }
+            }}
+          >
+            <div className="card-header">
+              <h3 className="card-label">ATTENTION SPOTLIGHT</h3>
+            </div>
+            <div className="card-content">
+              <div className="card-icon">📊</div>
+              <p className="card-description">Audience engagement performance analysis</p>
+            </div>
+            <div className="card-footer">
+              <span className="view-details">View Details →</span>
+            </div>
+          </div>
+
+          {/* Wallet (Verified Spend) Card */}
+          <div 
+            className="ledger-card wallet-card"
+            onClick={() => setShowWalletModal(true)}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setShowWalletModal(true);
+              }
+            }}
+          >
+            <div className="card-header">
+              <h3 className="card-label">WALLET (VERIFIED SPEND)</h3>
+            </div>
+            <div className="card-content">
+              <div className="card-icon">💰</div>
+              <p className="card-description">Budget allocation and spend tracking</p>
+            </div>
+            <div className="card-footer">
+              <span className="view-details">View Details →</span>
             </div>
           </div>
         </div>
@@ -958,7 +817,7 @@ export default function Dashboard() {
             className="modal-large"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="modal-header">
+            <header className="modal-header professional-modal-header">
               <div>
                 <h2>Pause Opportunities</h2>
               </div>
@@ -973,72 +832,120 @@ export default function Dashboard() {
               </button>
             </header>
 
-            <div className="modal-body">
-              {!showPauseDetails ? (
-                <>
-                  {/* Main Stats - Compact View */}
-                  <div className="pause-main-stats">
-                    <div className="stat-item">
-                      <span className="stat-label">Total</span>
-                      <span className="stat-number">128,742</span>
-                    </div>
-                    <div className="stat-divider">|</div>
-                    <div className="stat-item">
-                      <span className="stat-label">Today</span>
-                      <span className="stat-number">3,214</span>
-                    </div>
-                    <div className="stat-divider">|</div>
-                    <div className="stat-item">
-                      <span className="stat-label">Last 7 Days</span>
-                      <span className="stat-number">21,884</span>
-                    </div>
-                    <div className="stat-divider">|</div>
-                    <div className="stat-item">
-                      <span className="stat-label">Active Publishers</span>
-                      <span className="stat-number">6</span>
-                    </div>
+            <div className="modal-body pause-table-modal-body">
+              {/* Date Range Inputs - Top Section */}
+              <div className="date-range-header-new">
+                <div className="date-inputs-wrapper">
+                  <div className="date-field">
+                    <label className="date-label-text">FROM</label>
+                    <input 
+                      type="text" 
+                      value={pauseDateFrom}
+                      onChange={(e) => setPauseDateFrom(e.target.value)}
+                      placeholder="MM/DD/YYYY" 
+                      className="date-input-new" 
+                    />
                   </div>
-
-                  {/* Details Button */}
-                  <button
-                    className="btn-details"
-                    onClick={() => setShowPauseDetails(true)}
-                  >
-                    Details →
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* Detailed View */}
-                  <div className="pause-description">
-                    <p>
-                      <strong>Counting Criteria:</strong> Only pause events where the video reached 100% completion 
-                      and the QR code was rendered and viewable are counted.
-                    </p>
-                    <p><strong>Data Range:</strong> Jan 1–5, 2026</p>
+                  <div className="date-separator-new">→</div>
+                  <div className="date-field">
+                    <label className="date-label-text">TO</label>
+                    <input 
+                      type="text" 
+                      value={pauseDateTo}
+                      onChange={(e) => setPauseDateTo(e.target.value)}
+                      placeholder="MM/DD/YYYY" 
+                      className="date-input-new" 
+                    />
                   </div>
+                </div>
+                <div className="date-range-badge">DATE RANGE</div>
+              </div>
 
-                  {/* Publisher Distribution */}
-                  <div className="pause-section">
-                    <h3>Publisher Distribution</h3>
-                    <div className="publisher-distribution">
-                      <span className="pub-item">Tubi 312</span>
-                      <span className="pub-separator">/</span>
-                      <span className="pub-item">Pluto TV 128</span>
-                      <span className="pub-separator">/</span>
-                      <span className="pub-item">Roku Channel 60</span>
-                    </div>
-                  </div>
-
-                  {/* Back Button */}
-                  <button
-                    className="btn-back"
-                    onClick={() => setShowPauseDetails(false)}
-                  >
-                    ← Back
-                  </button>
-                </>
-              )}
+              {/* Professional Table with Publishers on Left */}
+              <div className="pause-table-container">
+                <table className="pause-opportunities-table-new">
+                  <thead>
+                    <tr>
+                      <th className="publisher-col-header">PUBLISHER</th>
+                      <th className="number-col">TOTAL<br/>OPPORTUNITIES</th>
+                      <th className="number-col">AVERAGE<br/>DURATION</th>
+                      <th className="number-col">TOTAL QR<br/>ENGAGEMENTS</th>
+                      <th className="number-col">CLICK THROUGH<br/>PERCENTAGE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="publisher-col-cell">
+                        <div className="publisher-icon-box tubi-icon">
+                          <PlayCircle size={20} />
+                        </div>
+                        <span className="publisher-name">Tubi</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new" value="14,256" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="45 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="8,934" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="62.5%" onChange={() => {}} /></td>
+                    </tr>
+                    <tr>
+                      <td className="publisher-col-cell">
+                        <div className="publisher-icon-box hulu-icon">
+                          <Tv2 size={20} />
+                        </div>
+                        <span className="publisher-name">Hulu</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new" value="32,145" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="52 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="19,234" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="59.8%" onChange={() => {}} /></td>
+                    </tr>
+                    <tr>
+                      <td className="publisher-col-cell">
+                        <div className="publisher-icon-box youtube-icon">
+                          <Youtube size={20} />
+                        </div>
+                        <span className="publisher-name">YouTube</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new" value="28,934" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="38 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="15,678" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="54.2%" onChange={() => {}} /></td>
+                    </tr>
+                    <tr>
+                      <td className="publisher-col-cell">
+                        <div className="publisher-icon-box peacock-icon">
+                          <Feather size={20} />
+                        </div>
+                        <span className="publisher-name">Peacock</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new" value="19,867" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="41 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="11,234" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="56.3%" onChange={() => {}} /></td>
+                    </tr>
+                    <tr>
+                      <td className="publisher-col-cell">
+                        <div className="publisher-icon-box appletv-icon">
+                          <Monitor size={20} />
+                        </div>
+                        <span className="publisher-name">Apple TV+</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new" value="12,543" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="35 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="7,456" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new" value="59.5%" onChange={() => {}} /></td>
+                    </tr>
+                    <tr className="total-row">
+                      <td className="publisher-col-cell total-label">
+                        <span className="publisher-name">TOTAL</span>
+                      </td>
+                      <td><input type="text" className="cell-input-new total-input" value="107,745" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new total-input" value="42.2 sec" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new total-input" value="62,536" onChange={() => {}} /></td>
+                      <td><input type="text" className="cell-input-new total-input" value="58.5%" onChange={() => {}} /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="modal-footer" style={{ display: 'none' }}>
