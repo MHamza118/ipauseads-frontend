@@ -1,5 +1,5 @@
 // src/pages/Dashboard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import scansApi from "../services/scansApi";
 import { Archive, Calendar, CheckCircle, Copy, AlertTriangle, PlayCircle, Tv2, Youtube, Feather, Monitor, Music } from "lucide-react";
@@ -22,12 +22,179 @@ export default function Dashboard() {
   const [selectedIpMetrics, setSelectedIpMetrics] = useState(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [showPauseOpportunitiesModal, setShowPauseOpportunitiesModal] = useState(false);
+  const [activeTab, setActiveTab] = useState(null); // Track active tab - starts closed
   const [showPauseDetails, setShowPauseDetails] = useState(false);
   const [pauseDateFrom, setPauseDateFrom] = useState('02/20/2026');
   const [pauseDateTo, setPauseDateTo] = useState('02/26/2026');
+  const [pauseTimePeriod, setPauseTimePeriod] = useState('past7'); // 'past7' or 'past30'
+
+  // Demo data for pause opportunities
+  const pauseDemoData = {
+    past7: {
+      totalOpportunities: '14,256',
+      averageDuration: '45 sec',
+      totalConversions: '8,934',
+      clickThroughRate: '62.5%',
+      dateFrom: '02/20/2026',
+      dateTo: '02/26/2026',
+      publishers: [
+        { name: 'Tubi', icon: 'tubi-icon', opportunities: '14,256', duration: '45 sec', conversions: '8,934', percentage: '62.5%' },
+        { name: 'Hulu', icon: 'hulu-icon', opportunities: '32,145', duration: '52 sec', conversions: '19,234', percentage: '59.8%' },
+        { name: 'YouTube', icon: 'youtube-icon', opportunities: '28,934', duration: '38 sec', conversions: '15,678', percentage: '54.2%' },
+        { name: 'Peacock', icon: 'peacock-icon', opportunities: '19,867', duration: '41 sec', conversions: '11,234', percentage: '56.3%' }
+      ]
+    },
+    past30: {
+      totalOpportunities: '58,432',
+      averageDuration: '48 sec',
+      totalConversions: '36,782',
+      clickThroughRate: '62.9%',
+      dateFrom: '01/28/2026',
+      dateTo: '02/26/2026',
+      publishers: [
+        { name: 'Tubi', icon: 'tubi-icon', opportunities: '58,432', duration: '48 sec', conversions: '36,782', percentage: '63.0%' },
+        { name: 'Hulu', icon: 'hulu-icon', opportunities: '125,678', duration: '55 sec', conversions: '79,456', percentage: '63.2%' },
+        { name: 'YouTube', icon: 'youtube-icon', opportunities: '112,345', duration: '42 sec', conversions: '68,234', percentage: '60.7%' },
+        { name: 'Peacock', icon: 'peacock-icon', opportunities: '78,912', duration: '44 sec', conversions: '47,890', percentage: '60.7%' }
+      ]
+    }
+  };
+
+  const currentPauseData = pauseDemoData[pauseTimePeriod];
+  
+  // Demo QR scan data for verified conversions
+  const qrScanDemoData = {
+    past7: [
+      { date: 'Feb 26, 2026', time: '20:50:13', qrCode: 'Tubi -STARBUCKS-001', timestamp: 'Feb 26, 2026 at 20:50:13', city: 'New York, NY, US', campaign: 'Tubi Q1-2026', device: 'Mobile / Android 10 / Mobile Chrome 143.0.0.0 / K', publisher: 'Tubi', status: 'Converted', browser: 'Mobile Chrome 143.0.0.0' },
+      { date: 'Feb 26, 2026', time: '18:32:45', qrCode: 'Hulu -NIKE-005', timestamp: 'Feb 26, 2026 at 18:32:45', city: 'Los Angeles, CA, US', campaign: 'Hulu Spring-2026', device: 'Mobile / iOS 17 / Safari 17.2 / iPhone 15', publisher: 'Hulu', status: 'Converted', browser: 'Safari 17.2' },
+      { date: 'Feb 25, 2026', time: '22:15:30', qrCode: 'YouTube -TESLA-012', timestamp: 'Feb 25, 2026 at 22:15:30', city: 'Chicago, IL, US', campaign: 'YouTube Tech-2026', device: 'Mobile / Android 13 / Chrome 142.0.0.0 / Samsung S23', publisher: 'YouTube', status: 'Converted', browser: 'Chrome 142.0.0.0' },
+      { date: 'Feb 25, 2026', time: '16:45:22', qrCode: 'Peacock -PEPSI-008', timestamp: 'Feb 25, 2026 at 16:45:22', city: 'Miami, FL, US', campaign: 'Peacock Summer-2026', device: 'Mobile / iOS 16 / Safari 16.5 / iPhone 14', publisher: 'Peacock', status: 'Converted', browser: 'Safari 16.5' },
+      { date: 'Feb 24, 2026', time: '14:20:18', qrCode: 'Tubi -MCDONALDS-003', timestamp: 'Feb 24, 2026 at 14:20:18', city: 'Houston, TX, US', campaign: 'Tubi Q1-2026', device: 'Mobile / Android 12 / Chrome 141.0.0.0 / Pixel 7', publisher: 'Tubi', status: 'Converted', browser: 'Chrome 141.0.0.0' }
+    ],
+    past30: [
+      { date: 'Feb 26, 2026', time: '20:50:13', qrCode: 'Tubi -STARBUCKS-001', timestamp: 'Feb 26, 2026 at 20:50:13', city: 'New York, NY, US', campaign: 'Tubi Q1-2026', device: 'Mobile / Android 10 / Mobile Chrome 143.0.0.0 / K', publisher: 'Tubi', status: 'Converted', browser: 'Mobile Chrome 143.0.0.0' },
+      { date: 'Feb 26, 2026', time: '18:32:45', qrCode: 'Hulu -NIKE-005', timestamp: 'Feb 26, 2026 at 18:32:45', city: 'Los Angeles, CA, US', campaign: 'Hulu Spring-2026', device: 'Mobile / iOS 17 / Safari 17.2 / iPhone 15', publisher: 'Hulu', status: 'Converted', browser: 'Safari 17.2' },
+      { date: 'Feb 25, 2026', time: '22:15:30', qrCode: 'YouTube -TESLA-012', timestamp: 'Feb 25, 2026 at 22:15:30', city: 'Chicago, IL, US', campaign: 'YouTube Tech-2026', device: 'Mobile / Android 13 / Chrome 142.0.0.0 / Samsung S23', publisher: 'YouTube', status: 'Converted', browser: 'Chrome 142.0.0.0' },
+      { date: 'Feb 24, 2026', time: '14:20:18', qrCode: 'Tubi -MCDONALDS-003', timestamp: 'Feb 24, 2026 at 14:20:18', city: 'Houston, TX, US', campaign: 'Tubi Q1-2026', device: 'Mobile / Android 12 / Chrome 141.0.0.0 / Pixel 7', publisher: 'Tubi', status: 'Converted', browser: 'Chrome 141.0.0.0' },
+      { date: 'Feb 22, 2026', time: '19:40:55', qrCode: 'Peacock -PEPSI-008', timestamp: 'Feb 22, 2026 at 19:40:55', city: 'Miami, FL, US', campaign: 'Peacock Summer-2026', device: 'Mobile / iOS 16 / Safari 16.5 / iPhone 14', publisher: 'Peacock', status: 'Converted', browser: 'Safari 16.5' },
+      { date: 'Feb 20, 2026', time: '13:25:40', qrCode: 'Hulu -AMAZON-020', timestamp: 'Feb 20, 2026 at 13:25:40', city: 'Seattle, WA, US', campaign: 'Hulu Spring-2026', device: 'Mobile / Android 13 / Chrome 143.0.0.0 / OnePlus 11', publisher: 'Hulu', status: 'Converted', browser: 'Chrome 143.0.0.0' },
+      { date: 'Feb 18, 2026', time: '11:10:25', qrCode: 'YouTube -FORD-015', timestamp: 'Feb 18, 2026 at 11:10:25', city: 'Detroit, MI, US', campaign: 'YouTube Auto-2026', device: 'Mobile / iOS 17 / Safari 17.3 / iPhone 15 Pro', publisher: 'YouTube', status: 'Converted', browser: 'Safari 17.3' },
+      { date: 'Feb 15, 2026', time: '16:55:30', qrCode: 'Tubi -WALMART-007', timestamp: 'Feb 15, 2026 at 16:55:30', city: 'Dallas, TX, US', campaign: 'Tubi Retail-2026', device: 'Mobile / Android 11 / Chrome 142.0.0.0 / Moto G', publisher: 'Tubi', status: 'Converted', browser: 'Chrome 142.0.0.0' },
+      { date: 'Feb 12, 2026', time: '20:30:15', qrCode: 'Peacock -DISNEY-022', timestamp: 'Feb 12, 2026 at 20:30:15', city: 'Orlando, FL, US', campaign: 'Peacock Entertainment-2026', device: 'Mobile / iOS 16 / Safari 16.6 / iPhone 13', publisher: 'Peacock', status: 'Converted', browser: 'Safari 16.6' },
+      { date: 'Feb 10, 2026', time: '09:45:50', qrCode: 'Hulu -APPLE-018', timestamp: 'Feb 10, 2026 at 09:45:50', city: 'San Francisco, CA, US', campaign: 'Hulu Tech-2026', device: 'Mobile / iOS 17 / Safari 17.2 / iPhone 15', publisher: 'Hulu', status: 'Converted', browser: 'Safari 17.2' },
+      { date: 'Feb 08, 2026', time: '15:20:35', qrCode: 'YouTube -SONY-025', timestamp: 'Feb 08, 2026 at 15:20:35', city: 'Las Vegas, NV, US', campaign: 'YouTube Electronics-2026', device: 'Mobile / Android 13 / Chrome 143.0.0.0 / Galaxy S24', publisher: 'YouTube', status: 'Converted', browser: 'Chrome 143.0.0.0' },
+      { date: 'Feb 05, 2026', time: '12:10:20', qrCode: 'Tubi -TARGET-011', timestamp: 'Feb 05, 2026 at 12:10:20', city: 'Minneapolis, MN, US', campaign: 'Tubi Retail-2026', device: 'Mobile / iOS 16 / Safari 16.5 / iPhone 14', publisher: 'Tubi', status: 'Converted', browser: 'Safari 16.5' },
+      { date: 'Feb 02, 2026', time: '18:55:45', qrCode: 'Peacock -NETFLIX-030', timestamp: 'Feb 02, 2026 at 18:55:45', city: 'Boston, MA, US', campaign: 'Peacock Streaming-2026', device: 'Mobile / Android 12 / Chrome 142.0.0.0 / Pixel 8', publisher: 'Peacock', status: 'Converted', browser: 'Chrome 142.0.0.0' },
+      { date: 'Jan 30, 2026', time: '21:40:10', qrCode: 'Hulu -UBER-014', timestamp: 'Jan 30, 2026 at 21:40:10', city: 'Atlanta, GA, US', campaign: 'Hulu Services-2026', device: 'Mobile / iOS 17 / Safari 17.2 / iPhone 15', publisher: 'Hulu', status: 'Converted', browser: 'Safari 17.2' },
+      { date: 'Jan 28, 2026', time: '10:25:55', qrCode: 'YouTube -ADIDAS-009', timestamp: 'Jan 28, 2026 at 10:25:55', city: 'Portland, OR, US', campaign: 'YouTube Sports-2026', device: 'Mobile / Android 13 / Chrome 143.0.0.0 / OnePlus 12', publisher: 'YouTube', status: 'Converted', browser: 'Chrome 143.0.0.0' }
+    ]
+  };
+  
   const [showVerifiedConversionsModal, setShowVerifiedConversionsModal] = useState(false);
   const [showConversionsDetails, setShowConversionsDetails] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [qrTimePeriod, setQrTimePeriod] = useState('past7'); // 'past7' or 'past30'
+
+  // Demo data for QR conversions summary
+  const qrConversionsSummaryData = {
+    past7: {
+      totalConversions: '8,934',
+      uniqueEngagements: '8,127',
+      duplicates: '47',
+      invalidTraffic: '12'
+    },
+    past30: {
+      totalConversions: '36,782',
+      uniqueEngagements: '33,456',
+      duplicates: '189',
+      invalidTraffic: '48'
+    }
+  };
+
+  const currentQrData = qrConversionsSummaryData[qrTimePeriod];
+
+  // Demo data for quality controls
+  const qualityControlData = {
+    uniqueIds: {
+      past7: {
+        total: 500,
+        dateRange: 'Feb 20-26, 2026 (Past 7 Days)',
+        ids: ['CONV-2026-001847', 'CONV-2026-001846', 'CONV-2026-001845', 'CONV-2026-001844', 'CONV-2026-001843', 'CONV-2026-001842', 'CONV-2026-001841', 'CONV-2026-001840', 'CONV-2026-001839', 'CONV-2026-001838']
+      },
+      past30: {
+        total: 2100,
+        dateRange: 'Jan 28 - Feb 26, 2026 (Past 30 Days)',
+        ids: ['CONV-2026-002100', 'CONV-2026-002099', 'CONV-2026-002098', 'CONV-2026-002097', 'CONV-2026-002096', 'CONV-2026-002095', 'CONV-2026-002094', 'CONV-2026-002093', 'CONV-2026-002092', 'CONV-2026-002091']
+      }
+    },
+    duplicates: {
+      past7: {
+        total: 12,
+        dateRange: 'Feb 20-26, 2026 (Past 7 Days)',
+        groups: [
+          {ip: '192.168.1.45', code: 'Tubi-STARBUCKS-001', time: 'Feb 26, 14:32:15', count: 3, window: '2.1 sec'},
+          {ip: '192.168.1.78', code: 'Hulu-NIKE-005', time: 'Feb 25, 13:47:33', count: 2, window: '1.8 sec'},
+          {ip: '192.168.2.12', code: 'YouTube-TESLA-012', time: 'Feb 24, 12:58:47', count: 4, window: '2.9 sec'},
+          {ip: '192.168.1.102', code: 'Peacock-PEPSI-008', time: 'Feb 23, 15:19:28', count: 2, window: '1.5 sec'},
+          {ip: '192.168.3.56', code: 'Tubi-MCDONALDS-003', time: 'Feb 22, 14:56:03', count: 3, window: '2.3 sec'}
+        ]
+      },
+      past30: {
+        total: 47,
+        dateRange: 'Jan 28 - Feb 26, 2026 (Past 30 Days)',
+        groups: [
+          {ip: '192.168.1.145', code: 'Tubi-STARBUCKS-001', time: 'Feb 26, 14:32:15', count: 5, window: '3.2 sec'},
+          {ip: '192.168.1.178', code: 'Hulu-NIKE-005', time: 'Feb 24, 13:47:33', count: 3, window: '2.1 sec'},
+          {ip: '192.168.2.212', code: 'YouTube-TESLA-012', time: 'Feb 20, 12:58:47', count: 6, window: '3.5 sec'},
+          {ip: '192.168.1.202', code: 'Peacock-PEPSI-008', time: 'Feb 15, 15:19:28', count: 4, window: '2.8 sec'},
+          {ip: '192.168.3.156', code: 'Tubi-WALMART-007', time: 'Feb 10, 14:56:03', count: 5, window: '3.1 sec'},
+          {ip: '192.168.4.89', code: 'Hulu-APPLE-018', time: 'Feb 5, 11:23:45', count: 3, window: '2.4 sec'},
+          {ip: '192.168.5.67', code: 'YouTube-SONY-025', time: 'Jan 30, 16:42:12', count: 4, window: '2.9 sec'}
+        ]
+      }
+    },
+    invalidTraffic: {
+      past7: {
+        total: 8,
+        dateRange: 'Feb 20-26, 2026 (Past 7 Days)',
+        categories: {
+          rapidScans: 2,
+          botPattern: 1,
+          suspiciousAgent: 1,
+          unusualGeo: 1,
+          proxyVpn: 0
+        },
+        logs: [
+          {ip: '203.0.113.45', time: 'Feb 26, 14:32:15', type: 'Rapid Sequential Scans', risk: 'High', reason: '50+ scans in 10 seconds'},
+          {ip: '198.51.100.78', time: 'Feb 25, 13:47:33', type: 'Bot Pattern Detected', risk: 'High', reason: 'Automated scanning pattern detected'},
+          {ip: '192.0.2.12', time: 'Feb 24, 12:58:47', type: 'Unusual Geolocation', risk: 'Medium', reason: '5+ countries in 5 minutes'},
+          {ip: '203.0.113.102', time: 'Feb 23, 15:19:28', type: 'Rapid Sequential Scans', risk: 'High', reason: '100+ scans in 30 seconds'},
+          {ip: '198.51.100.56', time: 'Feb 22, 14:56:03', type: 'Suspicious User Agent', risk: 'Medium', reason: 'Known bot user agent detected'}
+        ]
+      },
+      past30: {
+        total: 31,
+        dateRange: 'Jan 28 - Feb 26, 2026 (Past 30 Days)',
+        categories: {
+          rapidScans: 8,
+          botPattern: 4,
+          suspiciousAgent: 3,
+          unusualGeo: 2,
+          proxyVpn: 1
+        },
+        logs: [
+          {ip: '203.0.113.245', time: 'Feb 26, 14:32:15', type: 'Rapid Sequential Scans', risk: 'High', reason: '80+ scans in 15 seconds'},
+          {ip: '198.51.100.178', time: 'Feb 24, 13:47:33', type: 'Bot Pattern Detected', risk: 'High', reason: 'Automated scanning pattern detected'},
+          {ip: '192.0.2.112', time: 'Feb 20, 12:58:47', type: 'Unusual Geolocation', risk: 'Medium', reason: '8+ countries in 10 minutes'},
+          {ip: '203.0.113.202', time: 'Feb 15, 15:19:28', type: 'Rapid Sequential Scans', risk: 'High', reason: '120+ scans in 40 seconds'},
+          {ip: '198.51.100.156', time: 'Feb 10, 14:56:03', type: 'Suspicious User Agent', risk: 'Medium', reason: 'Known bot user agent detected'},
+          {ip: '192.0.2.89', time: 'Feb 5, 11:23:45', type: 'Proxy/VPN Usage', risk: 'Medium', reason: 'Traffic from known VPN service'},
+          {ip: '203.0.113.67', time: 'Jan 30, 16:42:12', type: 'Bot Pattern Detected', risk: 'High', reason: 'Consistent 1-second intervals detected'}
+        ]
+      }
+    }
+  };
+
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showWalletDetails, setShowWalletDetails] = useState(false);
   const [expandedPublisher, setExpandedPublisher] = useState(null);
@@ -42,10 +209,12 @@ export default function Dashboard() {
   const [showInvalidTrafficModal, setShowInvalidTrafficModal] = useState(false);
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedLogRow, setSelectedLogRow] = useState(null);
+  const [activeQualityControl, setActiveQualityControl] = useState(null); // Track active quality control inline view
   const [scansData, setScansData] = useState([]);
   const [scansLoading, setScansLoading] = useState(false);
   const [scansError, setScansError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  const logDetailsRef = useRef(null);
 
   // Update date in real-time
   useEffect(() => {
@@ -55,6 +224,15 @@ export default function Dashboard() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-scroll to conversion logs when opened
+  useEffect(() => {
+    if (selectedLogRow && logDetailsRef.current) {
+      setTimeout(() => {
+        logDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  }, [selectedLogRow]);
 
   // Filter states (still used for analytics summary)
   const [filters, setFilters] = useState({
@@ -346,7 +524,7 @@ export default function Dashboard() {
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">Engagements Status</label>
+          <label className="filter-label">Conversions Status</label>
           <select
             className="filter-input"
             value={filters.conversionStatus}
@@ -394,6 +572,10 @@ export default function Dashboard() {
         {/* Professional Header */}
         <div className="professional-header">
           <div className="header-content">
+            <div className="message-center-label">
+              <span className="message-text">MESSAGE CENTER</span>
+              <span className="message-count">2</span>
+            </div>
             <h1 className="header-title">iPause Performance Ledger</h1>
             <div className="header-date">
               <span id="todays-date">
@@ -411,12 +593,32 @@ export default function Dashboard() {
           {/* Pause Opportunities Card */}
           <div 
             className="ledger-card pause-opportunities-card"
-            onClick={() => setShowPauseOpportunitiesModal(true)}
+            onClick={() => {
+              if (activeTab === 'pause') {
+                setActiveTab(null);
+              } else {
+                setActiveTab('pause');
+              }
+              setShowPauseOpportunitiesModal(false);
+              setShowVerifiedConversionsModal(false);
+              setShowAttentionSpotlightModal(false);
+              setShowWalletModal(false);
+              setShowPauseDetails(false);
+              setActiveQualityControl(null);
+            }}
             role="button"
             tabIndex={0}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                setShowPauseOpportunitiesModal(true);
+                if (activeTab === 'pause') {
+                  setActiveTab(null);
+                } else {
+                  setActiveTab('pause');
+                }
+                setShowPauseOpportunitiesModal(false);
+                setShowVerifiedConversionsModal(false);
+                setShowAttentionSpotlightModal(false);
+                setShowWalletModal(false);
               }
             }}
           >
@@ -432,20 +634,40 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Verified QR Engagements Card */}
+          {/* Verified QR Conversions Card */}
           <div 
-            className="ledger-card verified-engagements-card"
-            onClick={() => setShowVerifiedConversionsModal(true)}
+            className="ledger-card verified-conversions-card"
+            onClick={() => {
+              if (activeTab === 'conversions') {
+                setActiveTab(null);
+              } else {
+                setActiveTab('conversions');
+              }
+              setShowPauseOpportunitiesModal(false);
+              setShowVerifiedConversionsModal(false);
+              setShowAttentionSpotlightModal(false);
+              setShowWalletModal(false);
+              setShowConversionsDetails(false);
+              setActiveQualityControl(null);
+            }}
             role="button"
             tabIndex={0}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                setShowVerifiedConversionsModal(true);
+                if (activeTab === 'conversions') {
+                  setActiveTab(null);
+                } else {
+                  setActiveTab('conversions');
+                }
+                setShowPauseOpportunitiesModal(false);
+                setShowVerifiedConversionsModal(false);
+                setShowAttentionSpotlightModal(false);
+                setShowWalletModal(false);
               }
             }}
           >
             <div className="card-header">
-              <h3 className="card-label">VERIFIED QR ENGAGEMENTS</h3>
+              <h3 className="card-label">VERIFIED QR CONVERSIONS</h3>
             </div>
             <div className="card-content">
               <div className="card-icon">✓</div>
@@ -459,12 +681,32 @@ export default function Dashboard() {
           {/* Attention Spotlight Card */}
           <div 
             className="ledger-card attention-spotlight-card"
-            onClick={() => setShowAttentionSpotlightModal(true)}
+            onClick={() => {
+              if (activeTab === 'spotlight') {
+                setActiveTab(null);
+              } else {
+                setActiveTab('spotlight');
+              }
+              setShowPauseOpportunitiesModal(false);
+              setShowVerifiedConversionsModal(false);
+              setShowAttentionSpotlightModal(false);
+              setShowWalletModal(false);
+              setShowAttentionDetails(false);
+              setActiveQualityControl(null);
+            }}
             role="button"
             tabIndex={0}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                setShowAttentionSpotlightModal(true);
+                if (activeTab === 'spotlight') {
+                  setActiveTab(null);
+                } else {
+                  setActiveTab('spotlight');
+                }
+                setShowPauseOpportunitiesModal(false);
+                setShowVerifiedConversionsModal(false);
+                setShowAttentionSpotlightModal(false);
+                setShowWalletModal(false);
               }
             }}
           >
@@ -473,7 +715,7 @@ export default function Dashboard() {
             </div>
             <div className="card-content">
               <div className="card-icon">📊</div>
-              <p className="card-description">Audience engagement performance analysis</p>
+              <p className="card-description">Audience conversion performance analysis</p>
             </div>
             <div className="card-footer">
               <span className="view-details">View Details →</span>
@@ -483,12 +725,32 @@ export default function Dashboard() {
           {/* Wallet (Verified Spend) Card */}
           <div 
             className="ledger-card wallet-card"
-            onClick={() => setShowWalletModal(true)}
+            onClick={() => {
+              if (activeTab === 'wallet') {
+                setActiveTab(null);
+              } else {
+                setActiveTab('wallet');
+              }
+              setShowPauseOpportunitiesModal(false);
+              setShowVerifiedConversionsModal(false);
+              setShowAttentionSpotlightModal(false);
+              setShowWalletModal(false);
+              setShowWalletDetails(false);
+              setActiveQualityControl(null);
+            }}
             role="button"
             tabIndex={0}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                setShowWalletModal(true);
+                if (activeTab === 'wallet') {
+                  setActiveTab(null);
+                } else {
+                  setActiveTab('wallet');
+                }
+                setShowPauseOpportunitiesModal(false);
+                setShowVerifiedConversionsModal(false);
+                setShowAttentionSpotlightModal(false);
+                setShowWalletModal(false);
               }
             }}
           >
@@ -503,6 +765,1076 @@ export default function Dashboard() {
               <span className="view-details">View Details →</span>
             </div>
           </div>
+        </div>
+
+        {/* Tab Content Area */}
+        <div className="tab-content-area">
+          {activeTab === 'pause' && (
+            <div className="content-section">
+              <header className="modal-header professional-modal-header">
+                <div>
+                  <h2>Pause Opportunities</h2>
+                </div>
+              </header>
+              <div className="modal-body">
+                {!showPauseDetails ? (
+                  <>
+                    {/* Summary View - Image 1 with 4 metric boxes */}
+                    <div className="pause-summary-view">
+                      {/* Date Range Section */}
+                      <div className="date-range-section-summary">
+                        <div className="date-range-boxes">
+                          <div 
+                            className={`date-box ${pauseTimePeriod === 'past7' ? 'date-box-selected' : ''}`}
+                            onClick={() => setPauseTimePeriod('past7')}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="date-box-checkbox-wrapper">
+                              <input 
+                                type="checkbox" 
+                                checked={pauseTimePeriod === 'past7'}
+                                onChange={() => setPauseTimePeriod('past7')}
+                                className="date-checkbox"
+                              />
+                              <label className="date-box-label">PAST 7 DAYS</label>
+                            </div>
+                            <div className="date-display">
+                              <span>From</span>
+                              <input 
+                                type="text" 
+                                value={pauseTimePeriod === 'past7' ? currentPauseData.dateFrom : '__/__/__'} 
+                                className="compact-date-input" 
+                                readOnly
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span>To</span>
+                              <input 
+                                type="text" 
+                                value={pauseTimePeriod === 'past7' ? currentPauseData.dateTo : '__/__/__'} 
+                                className="compact-date-input" 
+                                readOnly
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div 
+                            className={`date-box ${pauseTimePeriod === 'past30' ? 'date-box-selected' : ''}`}
+                            onClick={() => setPauseTimePeriod('past30')}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="date-box-checkbox-wrapper">
+                              <input 
+                                type="checkbox" 
+                                checked={pauseTimePeriod === 'past30'}
+                                onChange={() => setPauseTimePeriod('past30')}
+                                className="date-checkbox"
+                              />
+                              <label className="date-box-label">PAST 30 DAYS</label>
+                            </div>
+                            <div className="date-display">
+                              <span>From</span>
+                              <input 
+                                type="text" 
+                                value={pauseTimePeriod === 'past30' ? currentPauseData.dateFrom : '__/__/__'} 
+                                className="compact-date-input" 
+                                readOnly
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <span>To</span>
+                              <input 
+                                type="text" 
+                                value={pauseTimePeriod === 'past30' ? currentPauseData.dateTo : '__/__/__'} 
+                                className="compact-date-input" 
+                                readOnly
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4 Metric Boxes */}
+                      <div className="pause-metrics-grid">
+                        <div className="pause-metric-box">
+                          <h3 className="metric-box-header-large">TOTAL<br/>OPPORTUNITIES</h3>
+                          <div className="metric-box-value">{currentPauseData.totalOpportunities}</div>
+                        </div>
+                        <div className="pause-metric-box">
+                          <h3 className="metric-box-header-large">AVERAGE<br/>DURATION</h3>
+                          <div className="metric-box-value">{currentPauseData.averageDuration}</div>
+                        </div>
+                        <div className="pause-metric-box">
+                          <h3 className="metric-box-header-large">TOTAL QR<br/>CONVERSIONS</h3>
+                          <div className="metric-box-value">{currentPauseData.totalConversions}</div>
+                        </div>
+                        <div className="pause-metric-box">
+                          <h3 className="metric-box-header-large">CLICK THROUGH<br/>RATE</h3>
+                          <div className="metric-box-value">{currentPauseData.clickThroughRate}</div>
+                        </div>
+                      </div>
+
+                      {/* Counting Criteria Info */}
+                      <div className="criteria-info-box">
+                        <p><strong>Counting Criteria:</strong> Only pause events where the video reached 100% completion and the QR code was rendered and viewable are counted.</p>
+                      </div>
+
+                      {/* View Details Button */}
+                      <div className="action-buttons-center">
+                        <button 
+                          className="details-btn"
+                          onClick={() => setShowPauseDetails(true)}
+                        >
+                          VIEW DETAILS
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Detailed View - Image 2 with publisher table */}
+                    <div className="modal-body pause-table-modal-body">
+                      {/* Selected Period Badge - Top Section */}
+                      <div className="selected-period-header">
+                        <div className="selected-period-badge">
+                          {pauseTimePeriod === 'past7' ? 'PAST 7 DAYS' : 'PAST 30 DAYS'}
+                        </div>
+                        <div className="selected-period-dates">
+                          {currentPauseData.dateFrom} → {currentPauseData.dateTo}
+                        </div>
+                      </div>
+
+                      {/* Professional Table with Publishers on Left */}
+                      <div className="pause-table-container">
+                        <table className="pause-opportunities-table-new">
+                          <thead>
+                            <tr>
+                              <th className="publisher-col-header">PUBLISHER</th>
+                              <th className="number-col">TOTAL<br/>OPPORTUNITIES</th>
+                              <th className="number-col">AVERAGE<br/>DURATION</th>
+                              <th className="number-col">TOTAL QR<br/>CONVERSIONS</th>
+                              <th className="number-col">CLICK THROUGH<br/>PERCENTAGE</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentPauseData.publishers.map((publisher, index) => (
+                              <tr key={index}>
+                                <td className="publisher-col-cell">
+                                  <div className={`publisher-icon-box ${publisher.icon}`}>
+                                    {publisher.name === 'Tubi' && <PlayCircle size={20} />}
+                                    {publisher.name === 'Hulu' && <Tv2 size={20} />}
+                                    {publisher.name === 'YouTube' && <Youtube size={20} />}
+                                    {publisher.name === 'Peacock' && <Feather size={20} />}
+                                  </div>
+                                  <span className="publisher-name">{publisher.name}</span>
+                                </td>
+                                <td><input type="text" className="cell-input-new" value={publisher.opportunities} onChange={() => {}} /></td>
+                                <td><input type="text" className="cell-input-new" value={publisher.duration} onChange={() => {}} /></td>
+                                <td><input type="text" className="cell-input-new" value={publisher.conversions} onChange={() => {}} /></td>
+                                <td><input type="text" className="cell-input-new" value={publisher.percentage} onChange={() => {}} /></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Back Button */}
+                      <div className="action-buttons-center" style={{ marginTop: '24px' }}>
+                        <button 
+                          className="back-btn"
+                          onClick={() => setShowPauseDetails(false)}
+                        >
+                          ← Back
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'conversions' && (
+            <div className="content-section">
+              <header className="modal-header professional-modal-header">
+                <div>
+                  <h2>Verified QR Conversions</h2>
+                </div>
+              </header>
+              <div className="modal-body">
+                {!showConversionsDetails ? (
+                  <>
+                    {/* Summary View - Time Period Selection and Quality Controls */}
+                    <div className="qr-conversions-summary-view">
+                      {/* Time Period Selection */}
+                      <div className="date-range-section-summary">
+                        <div className="date-range-boxes">
+                          <div 
+                            className={`date-box ${qrTimePeriod === 'past7' ? 'date-box-selected' : ''}`}
+                            onClick={() => setQrTimePeriod('past7')}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="date-box-checkbox-wrapper">
+                              <input 
+                                type="checkbox" 
+                                checked={qrTimePeriod === 'past7'}
+                                onChange={() => setQrTimePeriod('past7')}
+                                className="date-checkbox"
+                              />
+                              <label className="date-box-label">PAST 7 DAYS</label>
+                            </div>
+                            <div className="qr-value-display">
+                              {qrConversionsSummaryData.past7.totalConversions}
+                            </div>
+                          </div>
+                          <div 
+                            className={`date-box ${qrTimePeriod === 'past30' ? 'date-box-selected' : ''}`}
+                            onClick={() => setQrTimePeriod('past30')}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="date-box-checkbox-wrapper">
+                              <input 
+                                type="checkbox" 
+                                checked={qrTimePeriod === 'past30'}
+                                onChange={() => setQrTimePeriod('past30')}
+                                className="date-checkbox"
+                              />
+                              <label className="date-box-label">PAST 30 DAYS</label>
+                            </div>
+                            <div className="qr-value-display">
+                              {qrConversionsSummaryData.past30.totalConversions}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quality Controls Section */}
+                      <div className="quality-controls-summary">
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => {
+                            setShowConversionsDetails(true);
+                            setActiveQualityControl('uniqueIds');
+                            setSelectedLogRow(null);
+                          }}
+                          title="Unique Engagements IDs"
+                        >
+                          <CheckCircle size={14} />
+                          <span>Unique Engagements IDs</span>
+                        </button>
+                        <span className="quality-separator">|</span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => {
+                            setShowConversionsDetails(true);
+                            setActiveQualityControl('duplicates');
+                            setSelectedLogRow(null);
+                          }}
+                          title="Duplicates"
+                        >
+                          <Copy size={14} />
+                          <span>Duplicates</span>
+                        </button>
+                        <span className="quality-separator">|</span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => {
+                            setShowConversionsDetails(true);
+                            setActiveQualityControl('invalidTraffic');
+                            setSelectedLogRow(null);
+                          }}
+                          title="Invalid Traffic"
+                        >
+                          <AlertTriangle size={14} />
+                          <span>Invalid Traffic</span>
+                        </button>
+                        <span className="quality-separator">|</span>
+                        <button 
+                          className="quality-item-button"
+                          onClick={() => {
+                            setShowConversionsDetails(true);
+                            setActiveQualityControl('archive');
+                            setSelectedLogRow(null);
+                          }}
+                          title="View Archived Data"
+                        >
+                          <Archive size={14} />
+                        </button>
+                      </div>
+
+                      {/* Details Button */}
+                      <div className="action-buttons-center">
+                        <button 
+                          className="details-btn"
+                          onClick={() => {
+                            setShowConversionsDetails(true);
+                            // Auto-select the timestamp view based on selected period
+                            setActiveQualityControl(qrTimePeriod === 'past7' ? 'timestamp' : 'timestamp30');
+                          }}
+                        >
+                          Details →
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Detailed View - Quality Controls */}
+                    <div className="conversions-details">
+                      <div className="detail-section">
+                        {activeQualityControl && (
+                          <>
+                            <div style={{backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '16px'}}>
+                              {activeQualityControl === 'timestamp' && (
+                                <div>
+                                  <div style={{backgroundColor: '#dbeafe', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #0284c7'}}>
+                                    <strong>Date Range: Feb 20-26, 2026 (Past 7 Days)</strong>
+                                  </div>
+                                  <h5>QR CODE SCANS</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '13px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>DATE</th>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>TIME</th>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>QR CODE SCANNED</th>
+                                        <th style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>LOGS</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {qrScanDemoData.past7.map((scan, idx) => (
+                                        <tr key={idx} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '10px'}}>{scan.date}</td>
+                                          <td style={{padding: '10px'}}>{scan.time}</td>
+                                          <td style={{padding: '10px', fontWeight: '500', color: '#0284c7'}}>{scan.qrCode}</td>
+                                          <td style={{padding: '10px', textAlign: 'center'}}>
+                                            <button 
+                                              onClick={() => {
+                                                setSelectedLogRow(selectedLogRow?.timestamp === scan.timestamp ? null : scan);
+                                              }}
+                                              style={{
+                                                padding: '6px 16px',
+                                                backgroundColor: selectedLogRow?.timestamp === scan.timestamp ? '#0369a1' : '#0284c7',
+                                                color: '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s'
+                                              }}
+                                              onMouseEnter={(e) => e.target.style.backgroundColor = '#0369a1'}
+                                              onMouseLeave={(e) => e.target.style.backgroundColor = selectedLogRow?.timestamp === scan.timestamp ? '#0369a1' : '#0284c7'}
+                                            >
+                                              {selectedLogRow?.timestamp === scan.timestamp ? 'Hide' : 'View'}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                  {selectedLogRow && (
+                                    <div ref={logDetailsRef} style={{marginTop: '20px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px'}}>
+                                      <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb'}}>
+                                        <h3 style={{margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827'}}>Conversion Logs</h3>
+                                        <p style={{margin: '4px 0 0', fontSize: '12px', color: '#6b7280'}}>Details for {selectedLogRow.timestamp}</p>
+                                      </div>
+                                      <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>TIMESTAMP</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.timestamp}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>CITY</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.city}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #dc2626', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>CAMPAIGN / CREATIVE ID</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.campaign}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>DEVICE</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.device}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>QR CODE</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.qrCode}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>PUBLISHER</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.publisher}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #10b981', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>ENGAGEMENTS STATUS</div>
+                                          <div style={{fontSize: '13px', fontWeight: '600', color: '#10b981', marginTop: '4px'}}>✓ {selectedLogRow.status}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>BROWSER</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.browser}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {activeQualityControl === 'timestamp30' && (
+                                <div>
+                                  <div style={{backgroundColor: '#dbeafe', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #0284c7'}}>
+                                    <strong>Date Range: Jan 28 - Feb 26, 2026 (Past 30 Days)</strong>
+                                  </div>
+                                  <h5>QR CODE SCANS</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '13px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>DATE</th>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>TIME</th>
+                                        <th style={{padding: '10px', textAlign: 'left', fontWeight: '600'}}>QR CODE SCANNED</th>
+                                        <th style={{padding: '10px', textAlign: 'center', fontWeight: '600'}}>LOGS</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {qrScanDemoData.past30.map((scan, idx) => (
+                                        <tr key={idx} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '10px'}}>{scan.date}</td>
+                                          <td style={{padding: '10px'}}>{scan.time}</td>
+                                          <td style={{padding: '10px', fontWeight: '500', color: '#0284c7'}}>{scan.qrCode}</td>
+                                          <td style={{padding: '10px', textAlign: 'center'}}>
+                                            <button 
+                                              onClick={() => {
+                                                setSelectedLogRow(selectedLogRow?.timestamp === scan.timestamp ? null : scan);
+                                              }}
+                                              style={{
+                                                padding: '6px 16px',
+                                                backgroundColor: selectedLogRow?.timestamp === scan.timestamp ? '#0369a1' : '#0284c7',
+                                                color: '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s'
+                                              }}
+                                              onMouseEnter={(e) => e.target.style.backgroundColor = '#0369a1'}
+                                              onMouseLeave={(e) => e.target.style.backgroundColor = selectedLogRow?.timestamp === scan.timestamp ? '#0369a1' : '#0284c7'}
+                                            >
+                                              {selectedLogRow?.timestamp === scan.timestamp ? 'Hide' : 'View'}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                  {selectedLogRow && (
+                                    <div ref={logDetailsRef} style={{marginTop: '20px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '20px'}}>
+                                      <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb'}}>
+                                        <h3 style={{margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827'}}>Conversion Logs</h3>
+                                        <p style={{margin: '4px 0 0', fontSize: '12px', color: '#6b7280'}}>Details for {selectedLogRow.timestamp}</p>
+                                      </div>
+                                      <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>TIMESTAMP</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.timestamp}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>CITY</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.city}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #dc2626', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>CAMPAIGN / CREATIVE ID</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.campaign}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>DEVICE</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.device}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>QR CODE</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.qrCode}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>PUBLISHER</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.publisher}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #10b981', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>ENGAGEMENTS STATUS</div>
+                                          <div style={{fontSize: '13px', fontWeight: '600', color: '#10b981', marginTop: '4px'}}>✓ {selectedLogRow.status}</div>
+                                        </div>
+                                        <div style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px'}}>
+                                          <div style={{fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: '#6b7280', letterSpacing: '0.5px'}}>BROWSER</div>
+                                          <div style={{fontSize: '13px', fontWeight: '500', color: '#111827', marginTop: '4px'}}>{selectedLogRow.browser}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {activeQualityControl === 'uniqueIds' && (
+                                <div>
+                                  <div style={{backgroundColor: '#dbeafe', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #0284c7'}}>
+                                    <strong>Total Unique Conversions IDs: {qualityControlData.uniqueIds[qrTimePeriod].total}</strong>
+                                  </div>
+                                  <div style={{backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+                                    <span style={{fontSize: '13px', color: '#0369a1'}}>Date Range: {qualityControlData.uniqueIds[qrTimePeriod].dateRange}</span>
+                                  </div>
+                                  <h5>CONVERSION ID LIST</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '12px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>CONVERSION ID</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DATE</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>TIME</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>STATUS</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {qualityControlData.uniqueIds[qrTimePeriod].ids.map((id, idx) => (
+                                        <tr key={id} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '8px', color: '#dc2626', fontWeight: '500'}}>{id}</td>
+                                          <td style={{padding: '8px'}}>{qrTimePeriod === 'past7' ? 'Feb 26 2026' : 'Feb 20 2026'}</td>
+                                          <td style={{padding: '8px'}}>14:32:{15+idx}</td>
+                                          <td style={{padding: '8px', color: '#059669', fontWeight: '500'}}>Verified</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                              {activeQualityControl === 'duplicates' && (
+                                <div>
+                                  <div style={{backgroundColor: '#fef3c7', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #f59e0b'}}>
+                                    <strong>Total Duplicate Scans: {qualityControlData.duplicates[qrTimePeriod].total}</strong>
+                                    <p style={{fontSize: '12px', marginTop: '4px', color: '#92400e'}}>Multiple scans from same IP within 2-3 second window. Only the first scan is counted as a conversion to prevent fraudulent charges.</p>
+                                  </div>
+                                  <div style={{backgroundColor: '#fef3c7', padding: '8px', borderRadius: '6px', marginBottom: '16px'}}>
+                                    <span style={{fontSize: '12px', color: '#b45309'}}>Date Range: {qualityControlData.duplicates[qrTimePeriod].dateRange}</span>
+                                  </div>
+                                  <h5>DUPLICATE SCAN GROUPS</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '12px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DEVICE IP</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>QR CODE</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>FIRST SCAN</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DUP COUNT</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>TIME WINDOW</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>STATUS</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {qualityControlData.duplicates[qrTimePeriod].groups.map((item, idx) => (
+                                        <tr key={idx} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '8px'}}>{item.ip}</td>
+                                          <td style={{padding: '8px'}}>{item.code}</td>
+                                          <td style={{padding: '8px'}}>{item.time}</td>
+                                          <td style={{padding: '8px'}}>{item.count}</td>
+                                          <td style={{padding: '8px'}}>{item.window}</td>
+                                          <td style={{padding: '8px', backgroundColor: '#fed7aa', color: '#92400e', fontWeight: '600', borderRadius: '4px', textAlign: 'center'}}>Duplicate</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                  <div style={{marginTop: '12px', padding: '10px', backgroundColor: '#eff6ff', borderRadius: '6px', fontSize: '11px', borderLeft: '3px solid #0284c7', color: '#0369a1'}}>
+                                    <strong>Note:</strong> Duplicate scans are automatically detected when the same QR code is scanned multiple times from the same service IP within a 2-3 second window. Only the first scan is counted as a conversion to prevent fraudulent charges.
+                                  </div>
+                                </div>
+                              )}
+                              {activeQualityControl === 'invalidTraffic' && (
+                                <div>
+                                  <div style={{backgroundColor: '#fee2e2', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #dc2626'}}>
+                                    <strong>Total Invalid Traffic Detected: {qualityControlData.invalidTraffic[qrTimePeriod].total}</strong>
+                                    <p style={{fontSize: '12px', marginTop: '4px', color: '#7f1d1d'}}>Invalid traffic includes bot/fraudulent activity - potential bots taking pictures without actual eye pause. These are excluded from billing.</p>
+                                  </div>
+                                  <div style={{backgroundColor: '#fee2e2', padding: '8px', borderRadius: '6px', marginBottom: '16px'}}>
+                                    <span style={{fontSize: '12px', color: '#991b1b'}}>Date Range: {qualityControlData.invalidTraffic[qrTimePeriod].dateRange}</span>
+                                  </div>
+                                  <h5>SUSPICIOUS ACTIVITY LOG</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '11px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DEVICE IP</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>SCAN TIME</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>ACTIVITY TYPE</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>RISK LEVEL</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>REASON</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>STATUS</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {qualityControlData.invalidTraffic[qrTimePeriod].logs.map((item, idx) => (
+                                        <tr key={idx} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '8px'}}>{item.ip}</td>
+                                          <td style={{padding: '8px'}}>{item.time}</td>
+                                          <td style={{padding: '8px', fontSize: '11px'}}>{item.type}</td>
+                                          <td style={{padding: '8px', color: item.risk === 'High' ? '#dc2626' : '#ea580c', fontWeight: '600'}}>{item.risk}</td>
+                                          <td style={{padding: '8px', fontSize: '10px'}}>{item.reason}</td>
+                                          <td style={{padding: '8px', backgroundColor: '#fecaca', color: '#7f1d1d', fontWeight: '600', borderRadius: '4px', textAlign: 'center'}}>Invalid</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                  <div style={{marginTop: '16px', padding: '12px', backgroundColor: '#f0f9ff', borderRadius: '6px', fontSize: '12px'}}>
+                                    <strong>Invalid Traffic Categories:</strong>
+                                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px'}}>
+                                      <div style={{textAlign: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb'}}>
+                                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#dc2626'}}>{qualityControlData.invalidTraffic[qrTimePeriod].categories.rapidScans}</div>
+                                        <div style={{fontSize: '12px', marginTop: '4px', fontWeight: '600'}}>Rapid Sequential Scans</div>
+                                        <div style={{fontSize: '11px', marginTop: '4px', color: '#6b7280'}}>Multiple scans from same IP in very short timeframe (seconds)</div>
+                                      </div>
+                                      <div style={{textAlign: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb'}}>
+                                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#dc2626'}}>{qualityControlData.invalidTraffic[qrTimePeriod].categories.botPattern}</div>
+                                        <div style={{fontSize: '12px', marginTop: '4px', fontWeight: '600'}}>Bot Pattern Detected</div>
+                                        <div style={{fontSize: '11px', marginTop: '4px', color: '#6b7280'}}>Automated scanning patterns with consistent intervals</div>
+                                      </div>
+                                      <div style={{textAlign: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb'}}>
+                                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#ea580c'}}>{qualityControlData.invalidTraffic[qrTimePeriod].categories.suspiciousAgent}</div>
+                                        <div style={{fontSize: '12px', marginTop: '4px', fontWeight: '600'}}>Suspicious User Agent</div>
+                                        <div style={{fontSize: '11px', marginTop: '4px', color: '#6b7280'}}>Known bot or crawler user agents detected</div>
+                                      </div>
+                                      <div style={{textAlign: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb'}}>
+                                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#ea580c'}}>{qualityControlData.invalidTraffic[qrTimePeriod].categories.unusualGeo}</div>
+                                        <div style={{fontSize: '12px', marginTop: '4px', fontWeight: '600'}}>Unusual Geolocation</div>
+                                        <div style={{fontSize: '11px', marginTop: '4px', color: '#6b7280'}}>Impossible patterns or multiple countries in short time</div>
+                                      </div>
+                                      <div style={{textAlign: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb', gridColumn: '1 / -1'}}>
+                                        <div style={{fontSize: '24px', fontWeight: 'bold', color: '#ea580c'}}>{qualityControlData.invalidTraffic[qrTimePeriod].categories.proxyVpn}</div>
+                                        <div style={{fontSize: '12px', marginTop: '4px', fontWeight: '600'}}>Proxy/VPN Usage</div>
+                                        <div style={{fontSize: '11px', marginTop: '4px', color: '#6b7280'}}>Traffic from known proxy or VPN services</div>
+                                      </div>
+                                    </div>
+                                    <div style={{marginTop: '12px', padding: '10px', backgroundColor: '#fef3c7', borderRadius: '6px', fontSize: '11px', borderLeft: '3px solid #f59e0b', color: '#92400e'}}>
+                                      <strong>Note:</strong> Invalid traffic detection is a placeholder feature demonstrating fraud prevention capabilities. The system identifies suspicious patterns to protect advertisers from fraudulent charges. Perfect accuracy is not guaranteed at this stage, but the system will evolve with more sophisticated algorithms.
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {activeQualityControl === 'archive' && (
+                                <div>
+                                  <div style={{backgroundColor: '#dbeafe', padding: '12px', borderRadius: '6px', marginBottom: '16px', borderLeft: '4px solid #0284c7'}}>
+                                    <strong>Data Older Than 30 Days</strong>
+                                    <p style={{fontSize: '12px', marginTop: '4px', color: '#0369a1'}}>This section contains archived timestamps and conversion data from more than 30 days ago</p>
+                                  </div>
+                                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px'}}>
+                                    <div style={{backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '6px', border: '1px solid #bae6fd'}}>
+                                      <div style={{fontSize: '12px', fontWeight: '600', color: '#0369a1'}}>TOTAL ARCHIVED RECORDS</div>
+                                      <div style={{fontSize: '20px', fontWeight: 'bold', marginTop: '8px'}}>12,847</div>
+                                    </div>
+                                    <div style={{backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '6px', border: '1px solid #bae6fd'}}>
+                                      <div style={{fontSize: '12px', fontWeight: '600', color: '#0369a1'}}>DATE RANGE</div>
+                                      <div style={{fontSize: '14px', fontWeight: '600', marginTop: '8px'}}>Dec 1 - Dec 31, 2025</div>
+                                    </div>
+                                    <div style={{backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '6px', border: '1px solid #bae6fd'}}>
+                                      <div style={{fontSize: '12px', fontWeight: '600', color: '#0369a1'}}>STORAGE LOCATION</div>
+                                      <div style={{fontSize: '14px', fontWeight: '600', marginTop: '8px'}}>Archive DB</div>
+                                    </div>
+                                  </div>
+                                  <h5>ARCHIVED CONVERSIONS</h5>
+                                  <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '12px'}}>
+                                    <thead>
+                                      <tr style={{backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb'}}>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DATE</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>CONVERSIONS</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>DUPLICATES</th>
+                                        <th style={{padding: '8px', textAlign: 'left', fontWeight: '600'}}>INVALID TRAFFIC</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {[{date: 'Dec 31, 2025', conv: 342, dup: 12, invalid: 3},
+                                        {date: 'Dec 30, 2025', conv: 298, dup: 8, invalid: 2},
+                                        {date: 'Dec 29, 2025', conv: 315, dup: 10, invalid: 4},
+                                        {date: 'Dec 28, 2025', conv: 267, dup: 6, invalid: 1},
+                                        {date: 'Dec 27, 2025', conv: 289, dup: 9, invalid: 2},
+                                      ].map((item, idx) => (
+                                        <tr key={idx} style={{borderBottom: '1px solid #e5e7eb'}}>
+                                          <td style={{padding: '8px'}}>{item.date}</td>
+                                          <td style={{padding: '8px'}}>{item.conv}</td>
+                                          <td style={{padding: '8px'}}>{item.dup}</td>
+                                          <td style={{padding: '8px'}}>{item.invalid}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              className="btn-back"
+                              onClick={() => {
+                                setShowConversionsDetails(false);
+                                setActiveQualityControl(null);
+                                setSelectedLogRow(null);
+                              }}
+                            >
+                              ← Back
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="detail-section audit-statement">
+                        <h4>Audit Statement</h4>
+                        <p>All conversions shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'spotlight' && (
+            <div className="content-section">
+              <header className="modal-header professional-modal-header">
+                <div>
+                  <h2>Attention Spotlight</h2>
+                </div>
+              </header>
+              <div className="modal-body">
+                {!showAttentionDetails ? (
+                  <>
+                    {/* Compact View */}
+                    {attentionLoading ? (
+                      <div style={{ textAlign: "center", padding: 40 }}>
+                        <div className="spinner"></div>
+                        <div style={{ marginTop: 12, color: "#6b7280" }}>Loading metrics...</div>
+                      </div>
+                    ) : (
+                      <div className="attention-metrics-compact">
+                        <div className="attention-metric-row">
+                          <span className="metric-name">Attention-to-Action Rate (A2AR)</span>
+                          <span className="metric-result">8.4%</span>
+                        </div>
+                        <div className="attention-metric-row">
+                          <span className="metric-name">Attention Scan Velocity (ASV)</span>
+                          <span className="metric-result">4.2 scans/min</span>
+                        </div>
+                        <div className="attention-metric-row">
+                          <span className="metric-name">Attention Composite Index (ACI)</span>
+                          <span className="metric-result">High</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Details Button */}
+                    <button
+                      className="btn-details"
+                      onClick={() => setShowAttentionDetails(true)}
+                      style={{marginTop: '20px'}}
+                    >
+                      Details →
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Detailed View */}
+                    <div className="attention-details">
+                      <div className="detail-section">
+                        <p><strong>Date Range:</strong> Jan 1-5, 2026</p>
+                      </div>
+
+                      <div className="detail-section">
+                        <p><strong>Spotlight on Attention metrics are updated in real time</strong></p>
+                      </div>
+
+                      <div className="detail-section">
+                        <h4>Attention-to-Action Rate (A2AR) = Verified QR Conversions ÷ Valid Pause Opportunities</h4>
+                        <div className="metric-calculation-box">
+                          <div className="calc-row">
+                            <span className="calc-label">Valid Pause Opportunities</span>
+                            <span className="calc-value">{attentionMetrics?.a2ar?.pauseOpportunities || 0}</span>
+                          </div>
+                          <div className="calc-row">
+                            <span className="calc-label">Verified QR Conversions</span>
+                            <span className="calc-value">{attentionMetrics?.a2ar?.qrDownloads || 0}</span>
+                          </div>
+                          <div className="calc-row calc-result">
+                            <span className="calc-label">A2AR</span>
+                            <span className="calc-value">{attentionMetrics?.a2ar?.percentage?.toFixed(2) || 0}%</span>
+                          </div>
+                        </div>
+                        <table className="tier-reference-table">
+                          <thead>
+                            <tr>
+                              <th>Level</th>
+                              <th>Description</th>
+                              <th>Range</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>1</td>
+                              <td>Low</td>
+                              <td>0.2% - 0.4%</td>
+                            </tr>
+                            <tr>
+                              <td>2</td>
+                              <td>Fair</td>
+                              <td>0.5% - 0.7%</td>
+                            </tr>
+                            <tr>
+                              <td>3</td>
+                              <td>Average</td>
+                              <td>0.8% - 1.5%</td>
+                            </tr>
+                            <tr>
+                              <td>4</td>
+                              <td>Strong</td>
+                              <td>1.6% - 2.5%</td>
+                            </tr>
+                            <tr>
+                              <td>5</td>
+                              <td>Exceptional</td>
+                              <td>2.6% - 3.0%+</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="detail-section">
+                        <h4>Attention Scan Velocity (ASV) = The Time QR Appeared and Time To Download</h4>
+                        <div className="metric-calculation-box">
+                          <div className="calc-row">
+                            <span className="calc-label">Average Scan Time</span>
+                            <span className="calc-value">{attentionMetrics?.asv?.averageSeconds?.toFixed(2) || 0}s</span>
+                          </div>
+                          <div className="calc-row">
+                            <span className="calc-label">Tier</span>
+                            <span className="calc-value">{attentionMetrics?.asv?.label || 'N/A'}</span>
+                          </div>
+                          <div className="calc-row calc-result">
+                            <span className="calc-label">ASV Status</span>
+                            <span className="calc-value">{attentionMetrics?.asv?.label || 'N/A'}</span>
+                          </div>
+                        </div>
+                        <table className="tier-reference-table">
+                          <thead>
+                            <tr>
+                              <th>Level</th>
+                              <th>Description</th>
+                              <th>Range</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>1</td>
+                              <td>Low</td>
+                              <td>&gt; 20 sec</td>
+                            </tr>
+                            <tr>
+                              <td>2</td>
+                              <td>Fair</td>
+                              <td>15 - 20 sec</td>
+                            </tr>
+                            <tr>
+                              <td>3</td>
+                              <td>Average</td>
+                              <td>10 - 15 sec</td>
+                            </tr>
+                            <tr>
+                              <td>4</td>
+                              <td>Strong</td>
+                              <td>5 - 10 sec</td>
+                            </tr>
+                            <tr>
+                              <td>5</td>
+                              <td>Exceptional</td>
+                              <td>&lt; 5 sec</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="detail-section">
+                        <h4>Attention Composite Index (ACI) = Attention-to-Action Rate + Attention Scan Velocity</h4>
+                        <div className="metric-calculation-box">
+                          <div className="calc-row">
+                            <span className="calc-label">A2AR Tier</span>
+                            <span className="calc-value">{attentionMetrics?.a2ar?.tier || 0}</span>
+                          </div>
+                          <div className="calc-row">
+                            <span className="calc-label">ASV Tier</span>
+                            <span className="calc-value">{attentionMetrics?.asv?.tier || 0}</span>
+                          </div>
+                          <div className="calc-row calc-result">
+                            <span className="calc-label">ACI Score</span>
+                            <span className="calc-value">{attentionMetrics?.aci?.score?.toFixed(2) || 0}</span>
+                          </div>
+                        </div>
+                        <table className="tier-reference-table">
+                          <thead>
+                            <tr>
+                              <th>Level</th>
+                              <th>Description</th>
+                              <th>Range</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>1</td>
+                              <td>Low</td>
+                              <td>2 - 3</td>
+                            </tr>
+                            <tr>
+                              <td>2</td>
+                              <td>Fair</td>
+                              <td>4 - 5</td>
+                            </tr>
+                            <tr>
+                              <td>3</td>
+                              <td>Average</td>
+                              <td>6 - 7</td>
+                            </tr>
+                            <tr>
+                              <td>4</td>
+                              <td>Strong</td>
+                              <td>8 - 9</td>
+                            </tr>
+                            <tr>
+                              <td>5</td>
+                              <td>Exceptional</td>
+                              <td>9 - 10</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Back Button */}
+                    <button
+                      className="btn-back"
+                      onClick={() => setShowAttentionDetails(false)}
+                    >
+                      ← Back
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'wallet' && (
+            <div className="content-section">
+              <header className="modal-header professional-modal-header">
+                <div>
+                  <h2>Wallet (Verified Spend)</h2>
+                </div>
+              </header>
+              <div className="modal-body">
+                {!showWalletDetails ? (
+                  <>
+                    {/* Wallet Summary Cards */}
+                    <div className="wallet-summary">
+                      <div className="wallet-card">
+                        <div className="wallet-label">Wallet Balance</div>
+                        <div className="wallet-amount">$18,420.00</div>
+                        <div className="wallet-status">Available</div>
+                      </div>
+                      <div className="wallet-card">
+                        <div className="wallet-label">Verified QR Conversions</div>
+                        <div className="wallet-amount">2,614</div>
+                        <div className="wallet-status">total</div>
+                      </div>
+                      <div className="wallet-card">
+                        <div className="wallet-label">Average Conversion Fee</div>
+                        <div className="wallet-amount">$7.04</div>
+                        <div className="wallet-status">per conversion (Variable: $5.00 – $8.00)</div>
+                      </div>
+                    </div>
+
+                    {/* View Details Button */}
+                    <button
+                      className="btn-details"
+                      onClick={() => setShowWalletDetails(true)}
+                      style={{marginTop: '20px'}}
+                    >
+                      View Details →
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Detailed View - Publisher Breakdown */}
+                    <div className="wallet-details">
+                      <h3>Verified Spend by Publisher</h3>
+                      <div className="publisher-table-wrapper">
+                        <table className="publisher-spend-table">
+                          <thead>
+                            <tr>
+                              <th>Publisher</th>
+                              <th>Verified QR Conversions</th>
+                              <th>Avg Conversions Fee</th>
+                              <th>Total Spend</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { name: 'Tubi', conversions: 1142, fee: 7.12, total: 8132.00 },
+                              { name: 'Hulu', conversions: 768, fee: 6.85, total: 5260.80 },
+                              { name: 'Pluto TV', conversions: 412, fee: 7.44, total: 3067.00 },
+                              { name: 'Roku Channel', conversions: 292, fee: 6.93, total: 1960.00 }
+                            ].map((pub) => (
+                              <React.Fragment key={pub.name}>
+                                <tr className="publisher-row">
+                                  <td>{pub.name}</td>
+                                  <td>{pub.conversions.toLocaleString()}</td>
+                                  <td>${pub.fee.toFixed(2)}</td>
+                                  <td className="total-spend">${pub.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                  <td>
+                                    <button
+                                      className="expand-btn"
+                                      onClick={() => setExpandedPublisher(expandedPublisher === pub.name ? null : pub.name)}
+                                    >
+                                      {expandedPublisher === pub.name ? '▼' : '▶'}
+                                    </button>
+                                  </td>
+                                </tr>
+                                {expandedPublisher === pub.name && (
+                                  <tr className="expanded-row">
+                                    <td colSpan="5">
+                                      <div className="publisher-details">
+                                        <div className="detail-item">
+                                          <span className="detail-label">Date Range:</span>
+                                          <span className="detail-value">Jan 1–5, 2026</span>
+                                        </div>
+                                        <div className="detail-item">
+                                          <span className="detail-label">Device Type:</span>
+                                          <span className="detail-value">CTV → Mobile QR scan</span>
+                                        </div>
+                                        <div className="detail-item">
+                                          <span className="detail-label">Content Environment:</span>
+                                          <span className="detail-value">Show / Genre</span>
+                                        </div>
+                                        <div className="detail-item">
+                                          <span className="detail-label">Conversions Status:</span>
+                                          <span className="detail-value">Verified</span>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            ))}
+                            <tr className="total-row">
+                              <td><strong>Total</strong></td>
+                              <td><strong>2,614</strong></td>
+                              <td><strong>$7.04</strong></td>
+                              <td className="total-spend"><strong>$18,420.00</strong></td>
+                              <td></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Back Button */}
+                    <button
+                      className="btn-back"
+                      onClick={() => {
+                        setShowWalletDetails(false);
+                        setExpandedPublisher(null);
+                      }}
+                    >
+                      ← Back
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -808,7 +2140,7 @@ export default function Dashboard() {
       )}
 
       {/* Pause Opportunities Modal */}
-      {showPauseOpportunitiesModal && (
+      {showPauseOpportunitiesModal && activeTab !== 'pause' && (
         <div
           className="modal-overlay"
           onClick={() => setShowPauseOpportunitiesModal(false)}
@@ -869,7 +2201,7 @@ export default function Dashboard() {
                       <th className="publisher-col-header">PUBLISHER</th>
                       <th className="number-col">TOTAL<br/>OPPORTUNITIES</th>
                       <th className="number-col">AVERAGE<br/>DURATION</th>
-                      <th className="number-col">TOTAL QR<br/>ENGAGEMENTS</th>
+                      <th className="number-col">TOTAL QR<br/>CONVERSIONS</th>
                       <th className="number-col">CLICK THROUGH<br/>PERCENTAGE</th>
                     </tr>
                   </thead>
@@ -964,7 +2296,7 @@ export default function Dashboard() {
       )}
 
       {/* Verified Conversions Modal */}
-      {showVerifiedConversionsModal && (
+      {showVerifiedConversionsModal && activeTab !== 'conversions' && (
         <div
           className="modal-overlay"
           onClick={() => setShowVerifiedConversionsModal(false)}
@@ -975,7 +2307,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>VERIFIED QR ENGAGEMENTS</h2>
+                <h2>VERIFIED QR CONVERSIONS</h2>
               </div>
               <button
                 className="close-btn"
@@ -1023,7 +2355,7 @@ export default function Dashboard() {
                   <div className="conversions-details">
                     <div className="detail-section">
                       <p><strong>Date Range:</strong> Jan 1–5, 2026</p>
-                      <p><strong>Verified QR Engagements:</strong> 500</p>
+                      <p><strong>Verified QR Conversions:</strong> 500</p>
                       <p><strong>Status:</strong> Verified • Billable • Settled</p>
                     </div>
 
@@ -1084,10 +2416,10 @@ export default function Dashboard() {
                         <button 
                           className="quality-item-button"
                           onClick={() => setShowConversionIdsModal(true)}
-                          title="Unique Engagements IDs"
+                          title="Unique Conversions IDs"
                         >
                           <CheckCircle size={14} />
-                          <span>Unique Engagements IDs</span>
+                          <span>Unique Conversions IDs</span>
                         </button>
                         <span className="quality-separator">|</span>
                         <button 
@@ -1120,7 +2452,7 @@ export default function Dashboard() {
 
                     <div className="detail-section audit-statement">
                       <h4>Audit Statement</h4>
-                      <p>All engagements shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
+                      <p>All conversions shown represent unique, consumer-initiated QR interactions verified by publisher confirmation and iPause server-side validation.</p>
                     </div>
                   </div>
 
@@ -1151,7 +2483,7 @@ export default function Dashboard() {
       )}
 
       {/* Wallet (Verified Spend) Modal */}
-      {showWalletModal && (
+      {showWalletModal && activeTab !== 'wallet' && (
         <div
           className="modal-overlay"
           onClick={() => setShowWalletModal(false)}
@@ -1187,7 +2519,7 @@ export default function Dashboard() {
                       <div className="wallet-status">Available</div>
                     </div>
                     <div className="wallet-card">
-                      <div className="wallet-label">Verified QR Engagements</div>
+                      <div className="wallet-label">Verified QR Conversions</div>
                       <div className="wallet-amount">2,614</div>
                       <div className="wallet-status">total</div>
                     </div>
@@ -1216,8 +2548,8 @@ export default function Dashboard() {
                         <thead>
                           <tr>
                             <th>Publisher</th>
-                            <th>Verified QR Engagements</th>
-                            <th>Avg Engagements Fee</th>
+                            <th>Verified QR Conversions</th>
+                            <th>Avg Conversions Fee</th>
                             <th>Total Spend</th>
                             <th></th>
                           </tr>
@@ -1261,7 +2593,7 @@ export default function Dashboard() {
                                         <span className="detail-value">Show / Genre</span>
                                       </div>
                                       <div className="detail-item">
-                                        <span className="detail-label">Engagements Status:</span>
+                                        <span className="detail-label">Conversions Status:</span>
                                         <span className="detail-value">Verified</span>
                                       </div>
                                     </div>
@@ -1313,7 +2645,7 @@ export default function Dashboard() {
       )}
 
       {/* Attention Spotlight Modal */}
-      {showAttentionSpotlightModal && (
+      {showAttentionSpotlightModal && activeTab !== 'spotlight' && (
         <div
           className="modal-overlay"
           onClick={() => setShowAttentionSpotlightModal(false)}
@@ -1388,14 +2720,14 @@ export default function Dashboard() {
                     </div>
 
                     <div className="detail-section">
-                      <h4>Attention-to-Action Rate (A2AR) = Verified QR Engagements ÷ Valid Pause Opportunities</h4>
+                      <h4>Attention-to-Action Rate (A2AR) = Verified QR Conversions ÷ Valid Pause Opportunities</h4>
                       <div className="metric-calculation-box">
                         <div className="calc-row">
                           <span className="calc-label">Valid Pause Opportunities</span>
                           <span className="calc-value">{attentionMetrics?.a2ar?.pauseOpportunities || 0}</span>
                         </div>
                         <div className="calc-row">
-                          <span className="calc-label">Verified QR Engagements</span>
+                          <span className="calc-label">Verified QR Conversions</span>
                           <span className="calc-value">{attentionMetrics?.a2ar?.qrDownloads || 0}</span>
                         </div>
                         <div className="calc-row calc-result">
@@ -1867,7 +3199,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Unique Engagements IDs</h2>
+                <h2>Unique Conversions IDs</h2>
               </div>
               <button
                 className="close-btn"
@@ -1880,7 +3212,7 @@ export default function Dashboard() {
             <div className="modal-body">
               <div className="conversion-ids-info">
                 <p>
-                  <strong>Total Unique Engagements IDs: 500</strong>
+                  <strong>Total Unique Conversions IDs: 500</strong>
                 </p>
                 <p className="conversion-ids-description">
                   Date Range: Jan 1–5, 2026
@@ -2216,7 +3548,7 @@ export default function Dashboard() {
           >
             <header className="modal-header">
               <div>
-                <h2>Unique Engagements IDs</h2>
+                <h2>Unique Conversions IDs</h2>
               </div>
               <button
                 className="close-btn"
@@ -2229,7 +3561,7 @@ export default function Dashboard() {
             <div className="modal-body">
               <div className="conversion-ids-info">
                 <p>
-                  <strong>Total Unique Engagements IDs: 500</strong>
+                  <strong>Total Unique Conversions IDs: 500</strong>
                 </p>
                 <p className="conversion-ids-description">
                   Date Range: Jan 1–5, 2026
@@ -2488,113 +3820,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Logs Modal */}
-      {showLogsModal && selectedLogRow && (() => {
-        const formatted = scansApi.formatTimestamp(selectedLogRow.timestamp);
-        return (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowLogsModal(false)}
-        >
-          <div
-            className="modal-content logs-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <header className="modal-header">
-              <div>
-                <h2>Conversion Logs</h2>
-                <p>Details for {formatted.date} at {formatted.time}</p>
-              </div>
-              <button
-                className="close-btn"
-                onClick={() => setShowLogsModal(false)}
-              >
-                ✕
-              </button>
-            </header>
-
-            <div className="modal-body logs-body">
-              <div className="logs-details-grid">
-                <div className="logs-detail-item">
-                  <label>Timestamp</label>
-                  <div className="logs-detail-value">
-                    {formatted.fullDateTime}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>City</label>
-                  <div className="logs-detail-value">
-                    {scansApi.formatLocation(selectedLogRow.deviceInfo?.geo || {
-                      city: selectedLogRow.city,
-                      region: selectedLogRow.region,
-                      country: selectedLogRow.country
-                    })}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>Campaign / Creative ID</label>
-                  <div className="logs-detail-value">
-                    {selectedLogRow.creativeId || 'N/A'}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>Device</label>
-                  <div className="logs-detail-value">
-                    {scansApi.formatDeviceInfo(selectedLogRow.deviceInfo)}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>QR Code</label>
-                  <div className="logs-detail-value">
-                    {selectedLogRow.qrId}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>Publisher</label>
-                  <div className="logs-detail-value">
-                    {selectedLogRow.publisher || 'Direct'}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>Engagements Status</label>
-                  <div className="logs-detail-value">
-                    {selectedLogRow.conversion ? (
-                      <span style={{ color: '#10b981' }}>✓ Converted</span>
-                    ) : (
-                      <span style={{ color: '#6b7280' }}>— No Conversion</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="logs-detail-item">
-                  <label>Browser</label>
-                  <div className="logs-detail-value">
-                    {selectedLogRow.deviceInfo?.browser || 'Unknown'}
-                    {selectedLogRow.deviceInfo?.browserVersion && ` ${selectedLogRow.deviceInfo.browserVersion}`}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn secondary"
-                onClick={() => setShowLogsModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-        );
-      })()}
     </div>
   );
 }

@@ -22,7 +22,7 @@
    ```bash
    npm run dev
    ```
-   - Dev server runs on `http://localhost:3000`
+   - Dev server runs on `https://api.ipauseads.com`
    - Hot Module Replacement (HMR) enabled by default
 
 3. **Build for production:**
